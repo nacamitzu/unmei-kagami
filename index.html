@@ -332,6 +332,7 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
     <button class="btn-sm" onclick="showTab('today')">日</button>
     <button class="btn-sm" onclick="showTab('kobetsu')">個別鑑定</button>
     <button class="btn-sm" id="tab-btn-kanteishi" onclick="showTab('kanteishi')">龍鑑定</button>
+    <button class="btn-sm" id="tab-btn-profile" onclick="showTab('profile')">プロフィール</button>
   </div>
 
   <!-- 天命 -->
@@ -462,6 +463,27 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
     <div id="kobetsu-pdf" style="display:none;margin-top:12px;">
       <button class="btn-pdf" onclick="genPDF('個別鑑定')">✦ PDFで保存する</button>
     </div>
+  </div>
+
+  <!-- プロフィール -->
+  <div id="tab-profile" class="card" style="display:none;">
+    <div class="result-lbl" style="margin-bottom:20px;">プ ロ フ ィ ー ル</div>
+    <div style="margin-bottom:14px;"><div class="lbl">お 名 前（姓　名）</div>
+      <input class="inp" id="profile-name" type="text" placeholder="例：山田 花子" /></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div><div class="lbl">生 年 月 日</div>
+        <input class="inp" id="profile-birth" type="date" /></div>
+      <div><div class="lbl">生まれた時刻（任意）</div>
+        <input class="inp" id="profile-hour" type="time" /></div>
+    </div>
+    <div style="margin-bottom:20px;"><div class="lbl">性 別</div>
+      <select class="inp" id="profile-gender">
+        <option value="">選択しない</option>
+        <option value="female">女性</option>
+        <option value="male">男性</option>
+      </select></div>
+    <div id="profile-msg" style="font-size:12px;color:#90d090;margin-bottom:12px;display:none;">保存しました</div>
+    <button class="btn-main" onclick="saveProfile()">プ ロ フ ィ ー ル を 保 存</button>
   </div>
 
   <!-- 鑑定師からのメッセージ -->
@@ -888,10 +910,7 @@ function showAuthMode(mode){
   });
 }
 
-function showLoggedIn(){
-  document.getElementById('auth-panel').style.display='none';
-  document.getElementById('input-area').style.display='block';
-  // ヘッダーにログアウトボタンを追加
+function addLogoutButton(){
   const logoutEl = document.getElementById('logout-btn');
   if(!logoutEl){
     const btn = document.createElement('div');
@@ -901,6 +920,48 @@ function showLoggedIn(){
     btn.onclick = doAuthLogout;
     document.querySelector('header').appendChild(btn);
   }
+}
+
+async function showLoggedIn(){
+  document.getElementById('auth-panel').style.display='none';
+  addLogoutButton();
+  // プロフィール取得
+  if(_authUser&&_authUser.id){
+    try{
+      const res = await fetch(WORKER+'/profile/get',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({user_id: _authUser.id})
+      });
+      const profile = await res.json();
+      if(profile&&profile.birth){
+        // プロフィールあり→自動入力して鑑定画面へ
+        document.getElementById('input-area').style.display='none';
+        startReadingFromProfile(profile);
+        return;
+      }
+    }catch(e){console.log('profile fetch error',e);}
+  }
+  // プロフィールなし→入力画面を表示
+  document.getElementById('input-area').style.display='block';
+}
+
+function startReadingFromProfile(profile){
+  // プロフィールデータでSを初期化
+  const name = profile.name||'';
+  const bv = profile.birth||'';
+  if(!bv)return;
+  S.name=name;
+  S.birthStr=bv;
+  S.birth=new Date(bv+'T00:00:00');
+  S.hour=profile.hour||'';
+  S.gender=profile.gender||'';
+  S.today=new Date();
+  calcAll();
+  try{localStorage.setItem('mk_profile',JSON.stringify({name,birth:bv,hour:S.hour,gender:S.gender}));}catch(e){}
+  document.getElementById('input-area').style.display='none';
+  const mainPanel=document.getElementById('main-panel');
+  if(mainPanel){mainPanel.style.display='block';}
+  showTab('unmei');
 }
 
 async function doAuthLogin(){
@@ -1004,6 +1065,36 @@ async function doUpdatePassword(){
   }catch(e){
     errEl.textContent='通信エラー：'+e.message;errEl.style.display='block';
   }
+}
+
+
+async function saveProfile(){
+  const name=document.getElementById('profile-name').value.trim();
+  const birth=document.getElementById('profile-birth').value;
+  const hour=document.getElementById('profile-hour').value;
+  const gender=document.getElementById('profile-gender').value;
+  if(!name||!birth){alert('お名前と生年月日は必須です');return;}
+  // ローカルのSを更新
+  S.name=name;
+  S.birthStr=birth;
+  S.birth=new Date(birth+'T00:00:00');
+  S.hour=hour;
+  S.gender=gender;
+  S.today=new Date();
+  calcAll();
+  try{localStorage.setItem('mk_profile',JSON.stringify({name,birth,hour,gender}));}catch(e){}
+  // Supabaseに保存
+  if(_authUser&&_authUser.id){
+    try{
+      await fetch(WORKER+'/profile/save',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({user_id:_authUser.id, name, birth, hour, gender})
+      });
+    }catch(e){console.log('profile save error',e);}
+  }
+  const msgEl=document.getElementById('profile-msg');
+  msgEl.style.display='block';
+  setTimeout(()=>msgEl.style.display='none',3000);
 }
 
 function doAuthLogout(){
@@ -1329,7 +1420,7 @@ function genPDF(title){
 }
 
 // ── タブ切替 ──
-const TABS=['unmei','kotoshi','kongetsu','konshu','today','kobetsu','kanteishi'];
+const TABS=['unmei','kotoshi','kongetsu','konshu','today','kobetsu','kanteishi','profile'];
 function showTab(name){
   TABS.forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
   document.querySelectorAll('#tabs .btn-sm').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===name);});
@@ -1339,6 +1430,14 @@ function showTab(name){
   if(name==='konshu'){initTarotIfEmpty('konshu');}
   if(name==='kobetsu'){initTarotIfEmpty('kobetsu');}
   if(name==='kanteishi'){renderKanteishi();}
+  if(name==='profile'){
+    // プロフィール画面に現在の値をセット
+    document.getElementById('profile-name').value=S.name||'';
+    document.getElementById('profile-birth').value=S.birthStr||'';
+    document.getElementById('profile-hour').value=S.hour||'';
+    document.getElementById('profile-gender').value=S.gender||'';
+    document.getElementById('profile-msg').style.display='none';
+  }
 }
 
 // ── 開始・リセット ──
@@ -1352,6 +1451,13 @@ function startReading(){
   S.shicyu=calcShicyu(S.birth,S.hour);S.kyusei=calcKyusei(S.birth);S.suuhi=calcSuuhi(S.birth);S.seimei=calcSeimei(name);
   drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
   try{localStorage.setItem('mk_profile',JSON.stringify({name,birth:bv,hour:S.hour,gender:S.gender}));}catch(e){}
+  // Supabaseにプロフィール保存
+  if(_authUser&&_authUser.id){
+    fetch(WORKER+'/profile/save',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id:_authUser.id, name, birth:bv, hour:S.hour, gender:S.gender})
+    }).catch(e=>console.log('profile save error',e));
+  }
   const t=S.today;
   document.getElementById('kotoshi-title').textContent=`${t.getFullYear()}年 の 指 針`;
   document.getElementById('kongetsu-title').textContent=`${t.getFullYear()}年${t.getMonth()+1}月 の 流 れ`;
