@@ -211,32 +211,7 @@ select.inp option{background:#0e0b07;}
     </div>
   </div>
 
-  <!-- 設定 -->
-  <div class="card">
-    <div class="sec-title">外 部 通 知 設 定</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-      <div>
-        <div class="lbl" style="margin-bottom:10px;">Chatwork</div>
-        <div class="setting-row"><span class="setting-key">API トークン</span><input class="inp" id="cw-token" type="password" placeholder="APIトークン" style="margin-bottom:0;"></div>
-        <div class="setting-row"><span class="setting-key">ルーム ID</span><input class="inp" id="cw-room" type="text" placeholder="ルームID（数字）" style="margin-bottom:0;"></div>
-      </div>
-      <div>
-        <div class="lbl" style="margin-bottom:10px;">EmailJS</div>
-        <div class="setting-row"><span class="setting-key">Service ID</span><input class="inp" id="ej-service" type="text" placeholder="service_xxxxxxx" style="margin-bottom:0;"></div>
-        <div class="setting-row"><span class="setting-key">Template ID</span><input class="inp" id="ej-template" type="text" placeholder="template_xxxxxxx" style="margin-bottom:0;"></div>
-        <div class="setting-row"><span class="setting-key">Public Key</span><input class="inp" id="ej-key" type="text" placeholder="Public Key" style="margin-bottom:0;"></div>
-      </div>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:8px;">
-      <button class="btn" onclick="saveSettings()">✦ 設 定 を 保 存</button>
-      <button class="btn-sm" onclick="testChatwork()">Chatworkテスト送信</button>
-    </div>
-  </div>
-
-  <div style="text-align:center;margin-top:12px;">
-    <button class="btn-sm btn-danger" onclick="doLogout()">ログアウト</button>
-  </div>
-</div>
+  
 </div>
 
 <div class="toast" id="toast"></div>
