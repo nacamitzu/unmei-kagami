@@ -1512,7 +1512,7 @@ async function renderKanteishi(){
     const res=await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/get',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({birth_key:birthKey()})
+      body:JSON.stringify({birth_key:birthKey(),user_id:_authUser?.id||null})
     });
     data=await res.json();
   }catch(e){
@@ -1723,7 +1723,7 @@ async function sendRequest(){
     await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/request',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({birth_key:bkForSupabase,name,birth,email})
+      body:JSON.stringify({birth_key:bkForSupabase,name,birth,email,user_id:_authUser?.id||null})
     });
   }catch(e){console.log('Supabase保存失敗',e);}
   // localStorageにも保存（後方互換）
