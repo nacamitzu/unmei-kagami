@@ -1179,6 +1179,7 @@ async function genToday(){
   const t=S.today,target=dayMode==='next'?addDays(t,1):t;
   const seed=mkSeed(S.birth,target);
   const kk=drawKK(seed),lk=getLucky(seed),k=S.kyusei,m=target.getMonth()+1;
+  const sc=S.shicyu;
   document.getElementById('today-date').textContent=`${target.getFullYear()}年${m}月${target.getDate()}日（${WD[target.getDay()]}）`;
   document.getElementById('today-kichiku').innerHTML=`<div class="kichiku-wrap"><div class="kichiku-furi">${kk.furi}</div><div class="kichiku ${kk.cls}">${kk.label}</div><div class="kichiku-en">${kk.en}</div><div class="kyusei-badge">本命星：${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）</div></div>`;
   document.getElementById('today-grid').innerHTML=`<div class="gitem"><div class="gl">今日の九星</div><div class="gv">${KYUSEI[k.todayK-1]}</div></div><div class="gitem"><div class="gl">ラッキーカラー</div><div class="gv">${lk.color}</div></div><div class="gitem"><div class="gl">吉 方 位</div><div class="gv">${lk.dir}</div></div><div class="gitem"><div class="gl">縁 起 物</div><div class="gv">${lk.item}</div></div>`;
