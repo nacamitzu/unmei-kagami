@@ -628,33 +628,20 @@ async function sendCompletionEmail(to, name, isRekanteishi){
   const subject = isRekanteishi
     ? '【命鏡】再鑑定結果をお届けします'
     : '【命鏡】鑑定結果をお届けします';
-  const greeting = name ? `${name} 様` : 'お客様';
-  const bodyText = isRekanteishi
-    ? '再鑑定が完了いたしました。命鏡アプリの龍鑑定タブよりご確認ください。'
-    : 'ツイてる龍42色鑑定が完了いたしました。命鏡アプリの龍鑑定タブよりご確認ください。';
-  const html = `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
-      <h2 style="color:#b8860b;">命鏡 - Mirror of Destiny</h2>
-      <p>${greeting}</p>
-      <p>${bodyText}</p>
-      <p style="margin-top:24px;">
-        <a href="https://nacamitzu.github.io/unmei-kagami/" 
-           style="background:#b8860b;color:#fff;padding:12px 24px;text-decoration:none;border-radius:4px;">
-          命鏡を開く
-        </a>
-      </p>
-      <p style="color:#888;font-size:12px;margin-top:24px;">
-        このメールは命鏡よりお送りしています。
-      </p>
-    </div>`;
   try{
-    await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/send-email',{
+    const res = await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/send-email',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({to, subject, html})
+      body: JSON.stringify({to, name, subject})
     });
-    toast('完了通知メールを送信しました');
+    const data = await res.json();
+    if(data.ok){
+      toast('完了通知メールを送信キューに追加しました');
+    } else {
+      toast('メール送信キューへの追加に失敗しました');
+    }
   }catch(e){
     console.log('email error',e);
+    toast('メール送信エラー：'+e.message);
   }
 }
 
