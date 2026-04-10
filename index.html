@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>命鏡 — AI統合鑑定</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Shippori+Mincho+B1:wght@400;500;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#c8a84b;--gold2:#e8d280;--gold3:#f8f0d0;--parch:#f0ebe0;--parch2:#ddd8cc;--deep:#0a0805;}
+body{font-family:'BIZ UDPGothic','Hiragino Kaku Gothic ProN',sans-serif;background:var(--deep);color:var(--parch);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 80px;overflow-x:hidden;}
+.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(255,255,255,0.07) 0%,transparent 70%),#0a0805;}
+.bg-dots{position:fixed;inset:0;z-index:0;background-image:radial-gradient(circle,rgba(255,255,255,0.05) 1px,transparent 1px);background-size:28px 28px;}
+.wrap{position:relative;z-index:1;width:100%;max-width:540px;padding:0 20px;box-sizing:border-box;}
+header{text-align:center;padding:40px 0 28px;}
+.crest{width:52px;height:52px;margin:0 auto 12px;border:1px solid rgba(220,215,200,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--gold2);}
+.site-name{font-size:28px;font-weight:700;letter-spacing:.3em;color:var(--gold2);font-family:'BIZ UDPGothic','Hiragino Kaku Gothic ProN',sans-serif;}
+.site-sub{font-size:12px;letter-spacing:.4em;color:rgba(220,215,200,0.9);margin-top:6px;}
+.hline{width:90px;height:0.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:16px auto 0;}
+.card{background:rgba(255,255,255,0.035);border:0.5px solid rgba(200,168,75,0.22);padding:24px;position:relative;margin-bottom:14px;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(210,205,190,0.8),transparent);}
+.lbl{font-size:13px;letter-spacing:.25em;color:#d4b96a;display:block;margin-bottom:8px;font-weight:500;}
+.inp{width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(200,168,75,0.28);border-radius:1px;padding:11px 14px;font-family:inherit;font-size:17px;color:var(--parch);outline:none;transition:border-color .2s;margin-bottom:16px;}
+.inp:focus{border-color:rgba(232,227,210,0.97);}
+select.inp option{background:#0e0b07;}
+.form-row{display:grid;grid-template-columns:1fr;gap:0;}
+.privacy{font-size:13px;line-height:1.85;color:rgba(228,223,208,0.95);background:rgba(255,255,255,0.05);border:0.5px solid rgba(200,168,75,0.18);padding:10px 13px;margin-bottom:18px;}
+.privacy strong{color:var(--gold2);}
+.btn-main{width:100%;background:transparent;border:1px solid var(--gold);color:var(--gold2);font-family:inherit;font-size:16px;letter-spacing:.35em;padding:14px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;}
+.btn-main::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);transform:translateX(-100%);transition:transform .7s;}
+.btn-main:hover::before{transform:translateX(100%);}
+.btn-main:hover{background:rgba(255,255,255,0.06);}
+.btn-sm{background:transparent;border:0.5px solid rgba(210,185,110,0.45);color:rgba(225,205,140,0.9);font-family:inherit;font-size:14px;letter-spacing:.15em;padding:8px 14px;cursor:pointer;transition:all .2s;border-radius:1px;}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold2);}
+.btn-sm.active{background:rgba(255,255,255,0.08);border-color:var(--gold);color:var(--gold2);}
+.btn-reset{width:100%;background:transparent;border:0.5px solid rgba(200,195,180,0.6);color:rgba(200,168,75,0.7);font-family:inherit;font-size:14px;letter-spacing:.2em;padding:10px;cursor:pointer;transition:all .2s;margin-top:10px;}
+.btn-reset:hover{border-color:var(--gold);color:var(--gold2);}
+.btn-pdf{background:transparent;border:0.5px solid rgba(210,205,190,0.8);color:var(--gold2);font-family:inherit;font-size:14px;letter-spacing:.2em;padding:9px 20px;cursor:pointer;transition:all .2s;}
+.btn-pdf:hover{background:rgba(255,255,255,0.07);border-color:var(--gold);}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.subtabs{display:flex;gap:6px;margin-bottom:18px;}
+.sec-title{font-size:14px;letter-spacing:.25em;color:#d4b96a;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-weight:500;}
+.sec-title::before,.sec-title::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,rgba(200,195,180,0.6),transparent);}
+.sec-title::after{background:linear-gradient(90deg,transparent,rgba(200,195,180,0.6));}
+
+/* タロット表示 */
+.tarot-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;justify-content:center;}
+.tarot-card{text-align:center;border:0.5px solid rgba(200,195,180,0.7);padding:12px 8px;background:rgba(255,255,255,0.05);min-width:72px;position:relative;}
+.tarot-pos{font-size:11px;letter-spacing:.1em;color:rgba(220,215,200,0.9);margin-bottom:5px;}
+.tarot-sym{font-size:20px;color:var(--gold);display:inline-block;}
+.tarot-name{font-size:13px;color:var(--parch2);margin-top:4px;line-height:1.4;}
+.tarot-rev{font-size:11px;color:rgba(200,80,80,0.75);margin-top:2px;}
+.tarot-divider{height:0.5px;background:linear-gradient(90deg,transparent,rgba(200,195,180,0.6),transparent);margin:16px 0 14px;}
+.tarot-note{font-size:12px;color:rgba(210,205,190,0.8);letter-spacing:.1em;text-align:center;margin-bottom:12px;}
+
+/* 二段構成 */
+.nidan-block{margin-bottom:22px;}
+.nidan-gen{font-size:16px;line-height:1.9;color:var(--gold3);font-style:italic;margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid rgba(200,168,75,0.18);font-family:'Shippori Mincho B1','Hiragino Mincho ProN',serif;}
+.nidan-kai-label{font-size:11px;letter-spacing:.25em;color:var(--gold);margin-bottom:6px;font-weight:500;}
+.nidan-kai{font-size:15px;line-height:2.1;color:var(--parch2);font-family:'BIZ UDPGothic','Hiragino Kaku Gothic ProN',sans-serif;}
+
+/* 今日の言葉 */
+.kotoba-items{display:flex;flex-direction:column;gap:14px;}
+.kotoba-item{border-left:2px solid rgba(210,205,190,0.8);padding:6px 0 6px 14px;}
+.kotoba-item-label{font-size:12px;letter-spacing:.22em;color:var(--gold2);margin-bottom:6px;font-weight:700;}
+.kotoba-item-gen{font-size:15px;line-height:1.9;color:var(--gold3);font-style:italic;margin-bottom:6px;padding-bottom:6px;border-bottom:0.5px solid rgba(200,168,75,0.15);}
+.kotoba-kai-label{font-size:11px;letter-spacing:.2em;color:var(--gold);margin-bottom:4px;}
+.kotoba-item-kai{font-size:15px;line-height:1.95;color:var(--parch2);}
+.ichigon-box{text-align:center;margin-top:16px;padding:14px;border:0.5px solid rgba(200,168,75,0.22);background:rgba(255,255,255,0.04);}
+.ichigon-lbl{font-size:11px;letter-spacing:.28em;color:var(--gold);margin-bottom:6px;}
+.ichigon-text{font-size:17px;color:var(--gold2);letter-spacing:.1em;font-weight:700;line-height:1.8;}
+
+/* グリッド */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;}
+.gitem{border:0.5px solid rgba(200,168,75,0.18);padding:10px 12px;background:rgba(255,255,255,0.04);}
+.gl{font-size:12px;letter-spacing:.2em;color:var(--gold);margin-bottom:5px;font-weight:500;}
+.gv{font-size:16px;color:var(--parch);font-weight:500;}
+
+/* 吉凶 */
+.kichiku-wrap{text-align:center;padding:4px 0 18px;}
+.kichiku-furi{font-size:13px;letter-spacing:.35em;color:var(--gold);margin-bottom:4px;}
+.kichiku{font-size:50px;font-weight:800;letter-spacing:.08em;margin-bottom:4px;}
+.kichiku-en{font-size:12px;letter-spacing:.35em;color:rgba(210,205,190,0.8);margin-bottom:18px;}
+.kk-daikichi{color:#e8c96e;text-shadow:0 0 36px rgba(232,201,110,0.45);}
+.kk-kichi{color:#d4b455;}.kk-chukichi{color:#c0a040;}.kk-shokichi{color:#b09030;}.kk-suekichi{color:#a08028;}.kk-kyo{color:#c06060;}.kk-daikyo{color:#c83030;}
+.kyusei-badge{display:inline-block;border:0.5px solid rgba(200,195,180,0.7);padding:5px 16px;font-size:15px;color:var(--gold2);letter-spacing:.1em;font-weight:500;}
+
+/* ロック */
+.locked-box{text-align:center;padding:28px 16px;background:rgba(200,168,75,0.03);border:0.5px dashed rgba(180,175,165,0.5);}
+.locked-icon{font-size:28px;color:rgba(200,195,180,0.6);margin-bottom:12px;}
+.locked-msg{font-size:15px;color:rgba(225,220,205,0.92);line-height:2;margin-bottom:8px;}
+.locked-date{font-size:13px;color:rgba(200,195,180,0.6);letter-spacing:.1em;}
+.locked-countdown{font-size:14px;color:rgba(215,210,195,0.85);margin-top:10px;line-height:1.8;}
+
+.divhr{height:0.5px;background:linear-gradient(90deg,transparent,rgba(200,168,75,0.22),transparent);margin:18px 0;}
+.individual-block{margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:2px solid rgba(200,168,75,0.4);}
+.indiv-title{font-size:12px;letter-spacing:.25em;color:#dfc070;font-weight:700;margin-bottom:5px;}
+.indiv-data{font-size:13px;color:rgba(235,225,200,0.95);margin-bottom:5px;letter-spacing:.05em;}
+.indiv-text{font-size:14px;color:var(--parch2);line-height:1.85;}
+.tarot-indiv-block{margin-bottom:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border-left:2px solid rgba(200,168,75,0.25);}
+.tarot-indiv-title{font-size:12px;letter-spacing:.15em;color:#dfc070;margin-bottom:4px;font-weight:700;}
+.tarot-indiv-text{font-size:13px;color:var(--parch2);line-height:1.8;}
+.accordion-btn{width:100%;background:transparent;border:0.5px solid rgba(200,168,75,0.3);color:#dfc070;font-family:inherit;font-size:12px;letter-spacing:.2em;padding:10px 16px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;transition:all .2s;margin-top:8px;}
+.accordion-btn:hover{background:rgba(200,168,75,0.06);}
+.accordion-content{display:none;padding:14px 16px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(200,168,75,0.18);border-top:none;font-size:12px;color:rgba(230,226,218,0.9);line-height:2.1;}
+.accordion-content.open{display:block;}
+/* スクロールバー */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:rgba(255,255,255,0.08);border-radius:3px;}
+::-webkit-scrollbar-thumb{background:rgba(200,168,75,0.6);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(200,168,75,0.9);}
+.result-lbl{font-size:12px;letter-spacing:.28em;color:#d4b96a;margin-bottom:12px;font-weight:500;}
+.result-text{font-size:15px;line-height:2.1;color:var(--parch2);}
+.cache-note{font-size:12px;color:rgba(220,215,200,0.85);margin-top:8px;letter-spacing:.1em;}
+.dots span{display:inline-block;width:4px;height:4px;background:var(--gold);border-radius:50%;margin:0 2px;animation:blink 1.1s infinite;}
+.dots span:nth-child(2){animation-delay:.18s;}.dots span:nth-child(3){animation-delay:.36s;}
+@keyframes blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
+@keyframes unfold{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.unfold{animation:unfold .5s ease forwards;}
+/* ── レスポンシブ ── */
+@media(min-width:600px){
+  .wrap{padding:0 32px;}
+  .form-row{grid-template-columns:1fr 1fr;}
+  .tabs{gap:8px;}
+  .btn-sm{padding:9px 18px;font-size:15px;}
+  .card{padding:28px 32px;}
+  .grid2{gap:12px;}
+  .tarot-row{gap:12px;}
+  .tarot-card{min-width:90px;padding:14px 12px;}
+  .subtabs{gap:10px;}
+}
+@media(min-width:900px){
+  body{padding:0 0 100px;}
+  .wrap{max-width:720px;}
+  .site-name{font-size:30px;}
+  .tabs{gap:10px;}
+  .btn-sm{padding:10px 22px;}
+  .card{padding:32px 40px;}
+  .kichiku{font-size:60px;}
+  .ryu-print-table{font-size:15px;}
+}
+
+@media print{
+  /* 非表示要素 */
+  .bg,.bg-dots,.tabs,.subtabs,button,.btn-main,.btn-sm,.btn-reset,.btn-pdf,
+  .tarot-note,.cache-note,.locked-box,
+  #input-area,footer{display:none!important;}
+
+  /* 基本設定 */
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{background:#fff!important;color:#111!important;font-size:11pt;line-height:1.9;}
+  .wrap{max-width:100%;padding:0 16mm;}
+
+  /* ヘッダー */
+  header{padding:8mm 0 6mm;border-bottom:1.5pt solid #a07820;}
+  .crest{border-color:#a07820!important;color:#a07820!important;}
+  .site-name{color:#5a3a00!important;text-shadow:none!important;font-size:20pt;}
+  .site-sub{color:#7a5a10!important;}
+  .hline{background:#a07820!important;}
+
+  /* カード */
+  .card{background:#fffdf7!important;border:0.5pt solid #a07820!important;break-inside:avoid;margin-bottom:6mm;padding:5mm 6mm;}
+  .card::before{background:#a07820!important;}
+
+  /* セクションタイトル */
+  .sec-title{color:#5a3a00!important;border-bottom:0.5pt solid #a07820;padding-bottom:2mm;margin-bottom:4mm;}
+  .sec-title::before,.sec-title::after{background:#a07820!important;}
+
+  /* 二段構成 */
+  .nidan-gen,.kotoba-item-gen{color:#3a2000!important;font-style:italic;text-shadow:none!important;border-bottom:0.5pt solid #c8a84b!important;}
+  .nidan-kai-label,.kotoba-kai-label,.kotoba-item-label{color:#5a3a00!important;}
+  .nidan-kai,.kotoba-item-kai{color:#111!important;}
+
+  /* 今日の言葉 */
+  .kotoba-item{border-left:2pt solid #a07820!important;}
+  .ichigon-box{border:0.5pt solid #a07820!important;background:#fdf8ec!important;}
+  .ichigon-lbl{color:#5a3a00!important;}
+  .ichigon-text{color:#3a2000!important;text-shadow:none!important;}
+
+  /* 吉凶 */
+  .kichiku-wrap{border-bottom:0.5pt solid #a07820;padding-bottom:4mm;margin-bottom:4mm;}
+  .kichiku{text-shadow:none!important;}
+  .kk-daikichi,.kk-kichi,.kk-chukichi,.kk-shokichi,.kk-suekichi{color:#5a3a00!important;}
+  .kk-kyo,.kk-daikyo{color:#8a0000!important;}
+  .kichiku-furi,.kichiku-en{color:#7a5a10!important;}
+  .kyusei-badge{border-color:#a07820!important;color:#3a2000!important;}
+
+  /* グリッド */
+  .grid2{break-inside:avoid;}
+  .gitem{border:0.5pt solid #a07820!important;background:#fdf8ec!important;}
+  .gl{color:#5a3a00!important;}
+  .gv{color:#111!important;}
+
+  /* タロット */
+  .tarot-row{break-inside:avoid;}
+  .tarot-card{border:0.5pt solid #a07820!important;background:#fdf8ec!important;}
+  .tarot-pos,.tarot-name{color:#111!important;}
+  .tarot-sym{color:#5a3a00!important;}
+  .tarot-rev{color:#8a0000!important;}
+  .tarot-divider{background:#a07820!important;}
+
+  /* 区切り */
+  .divhr{background:#a07820!important;}
+  .result-lbl{color:#5a3a00!important;}
+  .nidan-block{break-inside:avoid;}
+
+  /* 龍鑑定書 印刷用 */
+  .ryu-th{color:#5a3a00!important;border-bottom:1pt solid #a07820!important;background:#fdf8ec!important;}
+  .ryu-td{border-bottom:0.5pt solid #ddd!important;background:#fff!important;}
+  .ryu-num-col{color:#5a3a00!important;font-weight:700!important;}
+  .ryu-val{color:#111!important;}
+  .ryu-color-badge{border:0.5pt solid #999!important;}
+  .ryu-print-head{border-bottom:1pt solid #a07820!important;}
+  /* 注意事項・定義テキスト */
+  #tab-kanteishi .ryu-notes-area{background:#fffdf7!important;border:0.5pt solid #ccc!important;}
+  #tab-kanteishi .ryu-notes-area *{color:#222!important;}
+  #tab-kanteishi .ryu-notes-title{color:#5a3a00!important;font-weight:700!important;}
+  #tab-kanteishi .ryu-notes-text{color:#222!important;}
+  /* 鑑定日・龍数 */
+  #tab-kanteishi .ryu-date-label{color:#7a5a10!important;}
+  #tab-kanteishi .ryu-count-area{background:#fdf8ec!important;border:0.5pt solid #a07820!important;}
+  #tab-kanteishi .ryu-count-label-text{color:#7a5a10!important;}
+  #tab-kanteishi .ryu-count-num{color:#5a3a00!important;}
+  #tab-kanteishi .ryu-name-hint{color:#555!important;}
+  /* 入力欄は印刷時非表示 */
+  #tab-kanteishi input[type="text"]{border:0.5pt solid #ccc!important;color:#111!important;background:#fff!important;}
+}
+footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;color:rgba(180,175,165,0.5);}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="bg-dots"></div>
+<div class="wrap">
+<header>
+  <div class="crest">✦</div>
+  <div class="site-name">命　鏡</div>
+  <div class="site-sub">Mirror of Destiny</div>
+  <div class="hline"></div>
+</header>
+
+<!-- 入力 -->
+<div id="input-area" class="card">
+  <div class="sec-title">ご本人の情報</div>
+  <label class="lbl">お 名 前（姓　名）</label>
+  <input class="inp" id="inp-name" type="text" placeholder="例：山田 花子">
+  <div class="form-row">
+    <div><label class="lbl">生 年 月 日</label><input class="inp" id="inp-birth" type="date"></div>
+    <div><label class="lbl">生まれた時刻（任意）</label><input class="inp" id="inp-hour" type="time"></div>
+  </div>
+  <label class="lbl">性 別</label>
+  <select class="inp" id="inp-gender">
+    <option value="">選択しない</option>
+    <option value="female">女性</option>
+    <option value="male">男性</option>
+    <option value="other">その他</option>
+  </select>
+  <div class="privacy">
+    <strong>プライバシーについて</strong><br>
+    お名前・生年月日はブラウザ内のみで計算します。AIへは「本命星・吉凶・今日の九星・タロットのカード名」などの計算結果のみを送信します。個人を特定できる情報は外部に送信されません。鑑定結果はこのブラウザにのみ保存されます。
+  </div>
+  <button class="btn-main" onclick="startReading()">鑑　定　開　始</button>
+</div>
+
+<!-- メイン -->
+<div id="main-panel" style="display:none">
+  <div class="tabs" id="tabs">
+    <button class="btn-sm active" onclick="showTab('unmei')">天 命</button>
+    <button class="btn-sm" onclick="showTab('kotoshi')">年</button>
+    <button class="btn-sm" onclick="showTab('kongetsu')">月</button>
+    <button class="btn-sm" onclick="showTab('konshu')">週</button>
+    <button class="btn-sm" onclick="showTab('today')">日</button>
+    <button class="btn-sm" onclick="showTab('kobetsu')">個別鑑定</button>
+    <button class="btn-sm" id="tab-btn-kanteishi" onclick="showTab('kanteishi')">龍鑑定</button>
+  </div>
+
+  <!-- 天命 -->
+  <div id="tab-unmei" class="card unfold">
+    <div class="sec-title">天 命 — 運命・使命・宿命</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">四柱推命・九星気学・数秘術・姓名判断を複合し、あなたの変わらない天命を鑑定します。</div>
+    <div id="unmei-msg"><button class="btn-sm" onclick="genUnmei()">✦ 天命を鑑定する</button></div>
+    <div class="cache-note" id="unmei-cache-note"></div>
+    <div class="divhr"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-pdf" onclick="genPDF('天命鑑定書')">✦ PDFで保存する</button>
+    </div>
+  </div>
+
+  <!-- 年 -->
+  <div id="tab-kotoshi" class="card unfold" style="display:none">
+    <div class="subtabs">
+      <button class="btn-sm active" id="yr-now" onclick="setYear('now')">今 年</button>
+      <button class="btn-sm" id="yr-next" onclick="setYear('next')">来 年</button>
+    </div>
+    <div class="sec-title" id="kotoshi-title">今 年 の 指 針</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">命術・タロット5枚を統合し、この一年のあなたへの指針を鑑定します。</div>
+    <div id="kotoshi-locked" style="display:none"></div>
+    <div id="kotoshi-content">
+      <div class="tarot-note">✦ タロット5枚を自動で引いて命術と統合します</div>
+      <div class="tarot-row" id="kotoshi-tarot-row"></div>
+      <div id="kotoshi-msg"><button class="btn-sm" onclick="genKotoshi()">✦ 鑑定する</button></div>
+      <div class="cache-note" id="kotoshi-cache-note"></div>
+      <div class="divhr"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-pdf" onclick="genPDF('年の指針')">✦ PDFで保存する</button>
+        <button class="btn-sm" onclick="clearCacheKey(currentYearKey());initTarot('kotoshi');genKotoshi()">✦ 引き直す</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 月 -->
+  <div id="tab-kongetsu" class="card unfold" style="display:none">
+    <div class="subtabs">
+      <button class="btn-sm active" id="mo-now" onclick="setMonth('now')">今 月</button>
+      <button class="btn-sm" id="mo-next" onclick="setMonth('next')">来 月</button>
+    </div>
+    <div class="sec-title" id="kongetsu-title">今 月 の 流 れ</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">命術・タロット3枚（テーマ・流れ・結末）を統合し、今月のあなたへの鑑定です。</div>
+    <div id="kongetsu-locked" style="display:none"></div>
+    <div id="kongetsu-content">
+      <div class="tarot-note">✦ タロット3枚を自動で引いて命術と統合します</div>
+      <div class="tarot-row" id="kongetsu-tarot-row"></div>
+      <div id="kongetsu-msg"><button class="btn-sm" onclick="genKongetsu()">✦ 鑑定する</button></div>
+      <div class="cache-note" id="kongetsu-cache-note"></div>
+      <div class="divhr"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-pdf" onclick="genPDF('月の流れ')">✦ PDFで保存する</button>
+        <button class="btn-sm" onclick="clearCacheKey(currentMonthKey());initTarot('kongetsu');genKongetsu()">✦ 引き直す</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 週 -->
+  <div id="tab-konshu" class="card unfold" style="display:none">
+    <div class="subtabs">
+      <button class="btn-sm active" id="wk-now" onclick="setWeek('now')">今 週</button>
+      <button class="btn-sm" id="wk-next" onclick="setWeek('next')">来 週</button>
+    </div>
+    <div class="sec-title" id="konshu-title">今 週 の 気 流</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">命術・タロット3枚（過去・現在・未来）を統合し、今週の流れを鑑定します。</div>
+    <div id="konshu-locked" style="display:none"></div>
+    <div id="konshu-content">
+      <div class="tarot-note">✦ タロット3枚を自動で引いて命術と統合します</div>
+      <div class="tarot-row" id="konshu-tarot-row"></div>
+      <div id="konshu-msg"><button class="btn-sm" onclick="genKonshu()">✦ 鑑定する</button></div>
+      <div class="cache-note" id="konshu-cache-note"></div>
+      <div class="divhr"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-pdf" onclick="genPDF('週の気流')">✦ PDFで保存する</button>
+        <button class="btn-sm" onclick="clearCacheKey(currentWeekKey());initTarot('konshu');genKonshu()">✦ 引き直す</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日 -->
+  <div id="tab-today" class="card unfold" style="display:none">
+    <div class="subtabs">
+      <button class="btn-sm active" id="dy-now" onclick="setDay('now')">今 日</button>
+      <button class="btn-sm" id="dy-next" onclick="setDay('next')">明 日</button>
+    </div>
+    <div class="sec-title" id="today-sec-title">今 日 の 一 言</div>
+    <div id="today-date" style="font-size:11px;letter-spacing:.18em;color:rgba(215,210,195,0.85);margin-bottom:16px;text-align:center;"></div>
+    <div id="today-locked" style="display:none"></div>
+    <div id="today-content">
+      <div id="today-kichiku"></div>
+      <div class="grid2" id="today-grid"></div>
+      <div class="tarot-divider"></div>
+      <div class="tarot-note">✦ タロット1枚（今日の主題）を自動で引いて統合します</div>
+      <div class="tarot-row" id="today-tarot-row"></div>
+      <div class="divhr"></div>
+      <div class="result-lbl">今 日 の 言 葉</div>
+      <div id="today-msg"><span class="dots"><span></span><span></span><span></span></span></div>
+      <div class="divhr"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-pdf" onclick="genPDF('日の鑑定')">✦ PDFで保存する</button>
+        <button class="btn-sm" onclick="clearCacheKey(currentDayKey());initTarot('today');genToday()">✦ 引き直す</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 個別鑑定 -->
+  <div id="tab-kobetsu" class="card unfold" style="display:none">
+    <div class="sec-title">個 別 鑑 定</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">特定のテーマについて、命術＋タロット3枚で深く鑑定します。<br><span style="color:rgba(200,195,180,0.7);">※入力内容はAIに送信されますが、保存はされません。</span></div>
+    <label class="lbl">鑑定テーマ</label>
+    <select class="inp" id="kobetsu-theme">
+      <option value="恋愛・縁">恋愛・縁</option>
+      <option value="仕事・使命">仕事・使命</option>
+      <option value="金運・財運">金運・財運</option>
+      <option value="健康・体">健康・体</option>
+      <option value="人間関係">人間関係</option>
+      <option value="転機・決断">転機・決断</option>
+      <option value="その他">その他</option>
+    </select>
+    <label class="lbl">具体的な状況・悩み（任意）</label>
+    <textarea class="inp" id="kobetsu-q" rows="3" placeholder="例：転職を考えているのですが、今が時機かどうか迷っています" style="resize:vertical;margin-bottom:12px;"></textarea>
+    <div class="tarot-note" style="margin-bottom:10px;">✦ タロット3枚を自動で引いて命術と統合します</div>
+    <div class="tarot-row" id="kobetsu-tarot-row"></div>
+    <button class="btn-sm" onclick="clearKobetsuTarot();genKobetsu()" style="margin-bottom:8px;">✦ 個別鑑定を行う</button>
+    <div class="divhr"></div>
+    <div id="kobetsu-msg"></div>
+    <div id="kobetsu-pdf" style="display:none;margin-top:12px;">
+      <button class="btn-pdf" onclick="genPDF('個別鑑定')">✦ PDFで保存する</button>
+    </div>
+  </div>
+
+  <!-- 鑑定師からのメッセージ -->
+  <div id="tab-kanteishi" class="card unfold" style="display:none">
+    <div class="sec-title">ツイてる龍 42色鑑定</div>
+    <div id="kanteishi-content"></div>
+  </div>
+
+  <button class="btn-reset" onclick="resetAll()">✦ 最初からやり直す</button>
+</div>
+<footer>© 2026 みっつぅ</footer>
+</div>
+
+<script>
+const API_KEY=''; // APIキーはCloudflare Workerで管理
+const MODEL='claude-haiku-4-5-20251001';
+const KYUSEI=['一白水星','二黒土星','三碧木星','四緑木星','五黄土星','六白金星','七赤金星','八白土星','九紫火星'];
+const KYUSEI_EL=['水','土','木','木','土','金','金','土','火'];
+const KYUSEI_COL=['白','黒','碧','緑','黄','白','赤','白','紫'];
+const KAN10=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const SHI12=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const KAN_EL=['木','木','火','火','土','土','金','金','水','水'];
+const SHI_EL=['水','土','木','木','土','火','火','土','金','金','土','水'];
+const SUUHI_NAMES={1:'先駆者',2:'協調者',3:'創造者',4:'建設者',5:'自由人',6:'癒し手',7:'求道者',8:'達成者',9:'人類の友',11:'直観者',22:'夢想家'};
+const LUCKY_COLORS=['白','金','銀','紅','青','翠','紫','橙','藍','黒'];
+const LUCKY_DIRS=['北','北東','東','南東','南','南西','西','北西'];
+const LUCKY_ITEMS=['鏡','文','花','石','水','炎','風','土','光','影'];
+const WD=['日','月','火','水','木','金','土'];
+const KICHIKU=[
+  {label:'大 吉',furi:'だいきち',en:'GREAT FORTUNE',cls:'kk-daikichi',w:5},
+  {label:'吉',furi:'きち',en:'FORTUNE',cls:'kk-kichi',w:20},
+  {label:'中 吉',furi:'ちゅうきち',en:'GOOD FORTUNE',cls:'kk-chukichi',w:15},
+  {label:'小 吉',furi:'しょうきち',en:'SMALL FORTUNE',cls:'kk-shokichi',w:20},
+  {label:'末 吉',furi:'すえきち',en:'FUTURE FORTUNE',cls:'kk-suekichi',w:15},
+  {label:'凶',furi:'きょう',en:'MISFORTUNE',cls:'kk-kyo',w:20},
+  {label:'大 凶',furi:'だいきょう',en:'GREAT MISFORTUNE',cls:'kk-daikyo',w:5},
+];
+const TAROT_MAJOR=[
+  {name:'愚者',sym:'☽'},{name:'魔術師',sym:'✦'},{name:'女教皇',sym:'☾'},
+  {name:'女帝',sym:'♀'},{name:'皇帝',sym:'♂'},{name:'教皇',sym:'✙'},
+  {name:'恋人たち',sym:'♡'},{name:'戦車',sym:'◈'},{name:'力',sym:'∞'},
+  {name:'隠者',sym:'☆'},{name:'運命の輪',sym:'⊙'},{name:'正義',sym:'⚖'},
+  {name:'吊された男',sym:'✝'},{name:'死神',sym:'✕'},{name:'節制',sym:'∿'},
+  {name:'悪魔',sym:'♆'},{name:'塔',sym:'⚡'},{name:'星',sym:'★'},
+  {name:'月',sym:'☽'},{name:'太陽',sym:'☀'},{name:'審判',sym:'✺'},{name:'世界',sym:'◎'}
+];
+
+// タロットスプレッド定義
+const TAROT_SPREADS={
+  today:[{pos:'今日の主題'}],
+  konshu:[{pos:'過去'},{pos:'現在'},{pos:'未来'}],
+  kongetsu:[{pos:'テーマ'},{pos:'流れ'},{pos:'結末'}],
+  kotoshi:[{pos:'上半期'},{pos:'下半期'},{pos:'課題'},{pos:'才能'},{pos:'天の意志'}],
+  kobetsu:[{pos:'現状'},{pos:'障害'},{pos:'指針'}],
+};
+
+let S={name:'',birth:null,hour:'',gender:'',shicyu:null,kyusei:null,suuhi:null,seimei:null,today:null,kk:null,lucky:null};
+let drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
+let yearMode='now',monthMode='now',weekMode='now',dayMode='now';
+
+// ── 計算 ──
+function sr(n){n=(n^(n<<13))>>>0;n=(n^(n>>7))>>>0;return((n^(n<<17))>>>0)/0xFFFFFFFF;}
+function mkSeed(b,t){return((b.getFullYear()*13+b.getMonth()*7+b.getDate()*3+t.getFullYear()*31+(t.getMonth()+1)*17+t.getDate()*11)>>>0);}
+function reduce(n){if(n===11||n===22)return n;if(n<10)return n;return reduce(String(n).split('').reduce((a,c)=>a+parseInt(c),0));}
+function getSeason(m){return m<=2||m===12?'冬':m<=5?'春':m<=8?'夏':'秋';}
+function getWeekNum(d){return Math.ceil(((d-new Date(d.getFullYear(),0,1))/86400000+new Date(d.getFullYear(),0,1).getDay()+1)/7);}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function nextMonday(d){const r=new Date(d);const diff=(8-r.getDay())%7||7;r.setDate(r.getDate()+diff);return r;}
+function daysDiff(a,b){return Math.floor((b-a)/86400000);}
+function fmtDate(d){return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;}
+
+function calcShicyu(birth,hourStr){
+  const y=birth.getFullYear(),m=birth.getMonth()+1;
+  const nenKan=((y-4)%10+10)%10,nenShi=((y-4)%12+12)%12;
+  const base=new Date(1900,0,1);
+  const diffDays=Math.floor((birth-base)/86400000);
+  const niKan=((diffDays+6)%10+10)%10,niShi=((diffDays+4)%12+12)%12;
+  const monthBase=(y-1900)*12+(m-1);
+  const tsuKan=((monthBase+2)%10+10)%10,tsuShi=(m+1)%12;
+  let ji=null;
+  if(hourStr){const h=parseInt(hourStr.split(':')[0]);const jiShi=Math.floor((h+1)/2)%12;const jiKan=(niKan%5*2+jiShi)%10;ji={kan:KAN10[jiKan],shi:SHI12[jiShi],kanEl:KAN_EL[jiKan],shiEl:SHI_EL[jiShi]};}
+  return{nen:{kan:KAN10[nenKan],shi:SHI12[nenShi],kanEl:KAN_EL[nenKan],shiEl:SHI_EL[nenShi]},tsu:{kan:KAN10[tsuKan],shi:SHI12[tsuShi],kanEl:KAN_EL[tsuKan],shiEl:SHI_EL[tsuShi]},ni:{kan:KAN10[niKan],shi:SHI12[niShi],kanEl:KAN_EL[niKan],shiEl:SHI_EL[niShi]},ji};
+}
+function calcKyusei(birth){
+  const y=birth.getFullYear(),m=birth.getMonth()+1;
+  const ay=m<=1?y-1:y;
+  const honmei=((11-((ay-1984)%9+9)%9-1)%9)+1;
+  const diff=Math.floor((new Date()-new Date(1984,0,1))/86400000);
+  const todayK=((5-diff%9+9)%9)||9;
+  return{honmei,todayK};
+}
+function calcSuuhi(birth){
+  const y=birth.getFullYear(),m=birth.getMonth()+1,d=birth.getDate();
+  return{lifepath:reduce(y+m+d),birthday:reduce(d)};
+}
+function calcSeimei(name){
+  const parts=name.trim().split(/\s+/);
+  const sei=parts[0]||'',mei=parts[1]||'';
+  function st(s){let t=0;for(const c of s){const code=c.charCodeAt(0);t+=code>=0x4E00&&code<=0x9FFF?(code-0x4E00)%20+1:1;}return t||1;}
+  const seiS=st(sei),meiS=st(mei);
+  return{sei,mei,seiS,meiS,ten:reduce(seiS),chi:reduce(meiS),jin:reduce(seiS+meiS),gai:reduce((sei.length>1?st(sei[0]):1)+(mei.length>0?st(mei[mei.length-1]):1)),sou:reduce(seiS+meiS)};
+}
+function drawKK(seed){let r=sr(seed)*KICHIKU.reduce((a,k)=>a+k.w,0);for(const k of KICHIKU){r-=k.w;if(r<=0)return k;}return KICHIKU[1];}
+function getLucky(seed){return{color:LUCKY_COLORS[Math.floor(sr(seed+1)*LUCKY_COLORS.length)],dir:LUCKY_DIRS[Math.floor(sr(seed+2)*LUCKY_DIRS.length)],item:LUCKY_ITEMS[Math.floor(sr(seed+3)*LUCKY_ITEMS.length)]};}
+
+// ── タロット ──
+function drawTarotCards(tabKey,count){
+  const deck=[...TAROT_MAJOR];
+  const cards=[];
+  while(cards.length<count){
+    const idx=Math.floor(Math.random()*deck.length);
+    const card=deck.splice(idx,1)[0];
+    cards.push({...card,reversed:Math.random()>0.65,position:TAROT_SPREADS[tabKey][cards.length].pos});
+  }
+  drawnCards[tabKey]=cards;
+  return cards;
+}
+
+function renderTarotRow(cards,rowId){
+  document.getElementById(rowId).innerHTML=cards.map(c=>`
+    <div class="tarot-card">
+      <div class="tarot-pos">${c.position}</div>
+      <div class="tarot-sym" style="${c.reversed?'transform:rotate(180deg);display:inline-block':''}">${c.sym}</div>
+      <div class="tarot-name">${c.name}</div>
+      ${c.reversed?'<div class="tarot-rev">逆位置</div>':''}
+    </div>`).join('');
+}
+
+function tarotStr(cards){
+  return cards.map(c=>`【${c.position}】${c.name}（${c.reversed?'逆位置':'正位置'}）`).join(' / ');
+}
+
+function initTarot(tabKey){
+  const spread=TAROT_SPREADS[tabKey];
+  const cards=drawTarotCards(tabKey,spread.length);
+  renderTarotRow(cards,`${tabKey}-tarot-row`);
+  return cards;
+}
+
+function clearKobetsuTarot(){
+  drawnCards.kobetsu=[];
+  document.getElementById('kobetsu-tarot-row').innerHTML='';
+}
+
+// ── ロックチェック ──
+function checkLock(type){
+  const now=S.today,ny=now.getFullYear();
+  const nextYearUnlock=new Date(ny,11,1);
+  const nextMonth=new Date(ny,now.getMonth()+1,1);
+  const nextMonthUnlock=new Date(nextMonth.getTime()-14*86400000);
+  const nm=nextMonday(now);
+  const nextWeekUnlock=new Date(nm.getTime()-3*86400000);
+  if(type==='nextyear'){if(now>=nextYearUnlock)return{locked:false};const d=daysDiff(now,nextYearUnlock);return{locked:true,unlockDate:nextYearUnlock,msg:`来年の鑑定は、${fmtDate(nextYearUnlock)}から閲覧できます。`,sub:`あと ${d} 日でご覧いただけます`};}
+  if(type==='nextmonth'){if(now>=nextMonthUnlock)return{locked:false};const d=daysDiff(now,nextMonthUnlock);return{locked:true,unlockDate:nextMonthUnlock,msg:`来月の鑑定は、${fmtDate(nextMonthUnlock)}から閲覧できます。`,sub:`あと ${d} 日でご覧いただけます`};}
+  if(type==='nextweek'){if(now>=nextWeekUnlock)return{locked:false};const d=daysDiff(now,nextWeekUnlock);return{locked:true,unlockDate:nextWeekUnlock,msg:`来週の鑑定は、${fmtDate(nextWeekUnlock)}から閲覧できます。`,sub:`あと ${d} 日でご覧いただけます`};}
+  return{locked:false};
+}
+function showLocked(lockedId,contentId,info){
+  document.getElementById(lockedId).style.display='block';
+  document.getElementById(contentId).style.display='none';
+  document.getElementById(lockedId).innerHTML=`<div class="locked-box"><div class="locked-icon">✦</div><div class="locked-msg">${info.msg}</div><div class="locked-date">${info.sub}</div><div class="locked-countdown">解禁日：${fmtDate(info.unlockDate)}</div></div>`;
+}
+function showContent(lockedId,contentId){
+  document.getElementById(lockedId).style.display='none';
+  document.getElementById(contentId).style.display='block';
+}
+
+// ── キャッシュ ──
+function localDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const bk=()=>S.birthStr||localDate(S.birth);
+function cacheKey(type){return `mk_${type}_${bk()}`;}
+function currentYearKey(){const t=S.today,y=yearMode==='next'?t.getFullYear()+1:t.getFullYear();return `mk_year_${bk()}_${y}`;}
+function currentMonthKey(){const t=S.today;let y=t.getFullYear(),m=t.getMonth();if(monthMode==='next'){m++;if(m>11){m=0;y++;}}return `mk_month_${bk()}_${y}_${m}`;}
+function currentWeekKey(){const t=S.today;if(weekMode==='next'){const nm=nextMonday(t);return `mk_week_${bk()}_${nm.getFullYear()}_W${getWeekNum(nm)}`;}return `mk_week_${bk()}_${t.getFullYear()}_W${getWeekNum(t)}`;}
+function currentDayKey(){const t=S.today;if(dayMode==='next'){const tm=addDays(t,1);return `mk_day_${bk()}_${tm.getFullYear()}_${tm.getMonth()}_${tm.getDate()}`;}return `mk_day_${bk()}_${t.getFullYear()}_${t.getMonth()}_${t.getDate()}`;}
+function saveCache(key,data){try{localStorage.setItem(key,JSON.stringify({...data,saved:new Date().toISOString()}));}catch(e){}}
+function loadCache(key){try{const d=localStorage.getItem(key);return d?JSON.parse(d):null;}catch(e){return null;}}
+function clearCacheKey(key){try{localStorage.removeItem(key);}catch(e){}}
+
+// ── 時期切替 ──
+function setYear(mode){
+  yearMode=mode;
+  document.getElementById('yr-now').classList.toggle('active',mode==='now');
+  document.getElementById('yr-next').classList.toggle('active',mode==='next');
+  const y=mode==='next'?S.today.getFullYear()+1:S.today.getFullYear();
+  document.getElementById('kotoshi-title').textContent=`${y}年 の 指 針`;
+  if(mode==='next'){const lock=checkLock('nextyear');if(lock.locked){showLocked('kotoshi-locked','kotoshi-content',lock);return;}}
+  showContent('kotoshi-locked','kotoshi-content');
+  document.getElementById('kotoshi-msg').innerHTML='<button class="btn-sm" onclick="genKotoshi()">✦ 鑑定する</button>';
+  document.getElementById('kotoshi-cache-note').textContent='';
+  initTarotIfEmpty('kotoshi');genKotoshi();
+}
+function setMonth(mode){
+  monthMode=mode;
+  document.getElementById('mo-now').classList.toggle('active',mode==='now');
+  document.getElementById('mo-next').classList.toggle('active',mode==='next');
+  const t=S.today;let y=t.getFullYear(),m=t.getMonth()+1;
+  if(mode==='next'){m++;if(m>12){m=1;y++;}}
+  document.getElementById('kongetsu-title').textContent=`${y}年${m}月 の 流 れ`;
+  if(mode==='next'){const lock=checkLock('nextmonth');if(lock.locked){showLocked('kongetsu-locked','kongetsu-content',lock);return;}}
+  showContent('kongetsu-locked','kongetsu-content');
+  document.getElementById('kongetsu-msg').innerHTML='<button class="btn-sm" onclick="genKongetsu()">✦ 鑑定する</button>';
+  document.getElementById('kongetsu-cache-note').textContent='';
+  initTarotIfEmpty('kongetsu');genKongetsu();
+}
+function setWeek(mode){
+  weekMode=mode;
+  document.getElementById('wk-now').classList.toggle('active',mode==='now');
+  document.getElementById('wk-next').classList.toggle('active',mode==='next');
+  const t=S.today;
+  let label='';
+  if(mode==='next'){
+    const nm=nextMonday(t);
+    label=`${nm.getFullYear()}年${nm.getMonth()+1}月 第${getWeekNum(nm)}週 の 気 流`;
+    const lock=checkLock('nextweek');
+    if(lock.locked){document.getElementById('konshu-title').textContent=label;showLocked('konshu-locked','konshu-content',lock);return;}
+  } else {
+    label=`${t.getFullYear()}年${t.getMonth()+1}月 第${getWeekNum(t)}週 の 気 流`;
+  }
+  document.getElementById('konshu-title').textContent=label;
+  showContent('konshu-locked','konshu-content');
+  document.getElementById('konshu-msg').innerHTML='<button class="btn-sm" onclick="genKonshu()">✦ 鑑定する</button>';
+  document.getElementById('konshu-cache-note').textContent='';
+  initTarotIfEmpty('konshu');genKonshu();
+}
+function setDay(mode){
+  dayMode=mode;
+  document.getElementById('dy-now').classList.toggle('active',mode==='now');
+  document.getElementById('dy-next').classList.toggle('active',mode==='next');
+  showContent('today-locked','today-content');
+  initTarotIfEmpty('today');genToday();
+}
+
+function initTarotIfEmpty(tabKey){
+  if(!drawnCards[tabKey]||drawnCards[tabKey].length===0){
+    initTarot(tabKey);
+  }
+}
+
+// ── API ──
+const SYSTEM_PROMPT=`あなたは古来より伝わる天命の声を代弁する存在です。
+
+あなたには、複数の占術が同時に指し示す「この人の魂の核心」を読み解いた結果が渡されます。
+個別の占術解説はすでに相談者に提示されています。あなたはそれを繰り返してはなりません。
+
+あなたの使命は、4つ（または複数）の占術がすべて一致して示している「唯一の真実」を、天啓のような言葉として届けることです。
+
+【厳守事項】
+・四柱推命・九星気学・数秘術・姓名判断・タロットなどの占術名を一切使わない
+・個別占術の説明を繰り返さない
+・「今のあなたへ」「手紙」「物語」などの表現は使わない
+・各段落は必ず「古語の天啓（20字以内）」で始め、改行して「解説：300字以上の現代語」を続ける
+・古語は漢文調・和歌調の格調ある表現にする
+・解説は「あなた」への直接の語りかけで書く
+・解説は必ず「あなた」という二人称で書く（「お前」「貴方」「君」は使わない）
+・文章は必ず最後まで完結させる`;
+
+let _apiRunning=false;
+
+async function callAPI(prompt,maxTokens=800){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),30000);
+  const workerUrl='https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/anthropic';
+  try{
+    const res=await fetch(workerUrl,{
+      method:'POST',
+      signal:controller.signal,
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:MODEL,
+        max_tokens:maxTokens,
+        system:SYSTEM_PROMPT,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    clearTimeout(timer);
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(`API Error ${res.status}: ${err?.error?.message||res.statusText}`);
+    }
+    const data=await res.json();
+    return data.content?.[0]?.text||'';
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError')throw new Error('タイムアウト（30秒）しました。通信環境を確認してください。');
+    throw e;
+  }
+}
+
+function showError(targetId,msg){
+  const el=document.getElementById(targetId);
+  if(el)el.innerHTML=`<div style="font-size:12px;color:rgba(220,100,100,0.9);padding:10px;border:0.5px solid rgba(220,100,100,0.3);line-height:1.9;">⚠ ${msg}<br><span style="font-size:11px;opacity:.7;">「更新する」または「引き直す」ボタンで再試行できます。</span></div>`;
+}
+
+
+// タロット意味辞書
+const TAROT_MEANINGS_JP={
+  '愚者':['新しい始まり・純粋な可能性・冒険への一歩','束縛からの解放を求めているが、無謀になりやすい時'],
+  '魔術師':['意志と創造力が高まる・行動を起こす時','力を誤用しやすい・集中力が散漫になりやすい時'],
+  '女教皇':['直感が冴える・隠れた知恵が働く時','内側に引きこもりすぎ・秘密を抱えやすい時'],
+  '女帝':['豊かさと創造性が溢れる・愛情深くなれる時','依存や過保護になりやすい・感情に流されやすい時'],
+  '皇帝':['安定と権威・物事をしっかり構築できる時','頑固になりやすい・支配的になりやすい時'],
+  '教皇':['伝統と精神的な支柱・信頼できる導きがある時','形式に縛られやすい・盲目的な服従に注意'],
+  '恋人たち':['重要な選択の時・調和と愛が育まれる時','迷いや誘惑に揺れやすい・決断を避けやすい時'],
+  '戦車':['強い意志で勝利を掴める・前進の勢いがある時','強引になりやすい・感情のコントロールが必要な時'],
+  '力':['内なる強さと勇気が発揮できる時','自信を失いやすい・感情に押し流されやすい時'],
+  '隠者':['内省と孤独な探求が実を結ぶ時','引きこもりすぎ・孤立を深めやすい時'],
+  '運命の輪':['転換期・新しいチャンスが巡ってくる時','運命に抵抗しやすい・不運に感じやすい時'],
+  '正義':['公正な判断ができる・真実が明らかになる時','不公平を感じやすい・自己欺瞞に注意'],
+  '吊された男':['視点を変えることで道が開ける・待機が必要な時','停滞感を感じやすい・犠牲感が強くなりやすい時'],
+  '死神':['古いものが終わり新しいものが始まる変容の時','変化への強い抵抗・手放せないものが出やすい時'],
+  '節制':['調和と癒しの時・バランスを保つことが大切','過剰・不均衡に陥りやすい・極端に走りやすい時'],
+  '悪魔':['執着や束縛から解放されるヒントが見える時','誘惑や依存に囚われやすい・物質的な欲求が強まる時'],
+  '塔':['突然の変化が訪れる・固執したものが壊れる時','混乱を恐れやすい・崩壊を恐れるあまり動けなくなる時'],
+  '星':['希望と癒しの時・インスピレーションが降りてくる時','現実から逃避しやすい・夢見がちになりやすい時'],
+  '月':['潜在意識や直感が強くなる時・夢が重要なメッセージを持つ','恐れや幻想に振り回されやすい・混乱しやすい時'],
+  '太陽':['成功と活力・喜びが満ちる・物事が明るく進む時','過剰な自信・表面的な明るさに隠れた問題に注意'],
+  '審判':['覚醒と再生・自分の使命に気づく時','自己批判が強くなりやすい・過去への後悔を手放せない時'],
+  '世界':['完成と達成・一つのサイクルが円満に終わる時','未完成のまま停滞しやすい・次のステップへの迷い'],
+};
+
+function renderTarotIndividual(cards){
+  return cards.map(c=>{
+    const meanings=TAROT_MEANINGS_JP[c.name]||['可能性を示しています','課題を示しています'];
+    const meaning=c.reversed?meanings[1]:meanings[0];
+    return '<div class="tarot-indiv-block">'
+      +'<div class="tarot-indiv-title">【'+c.position+'】'+c.name+'（'+(c.reversed?'逆位置':'正位置')+'）</div>'
+      +'<div class="tarot-indiv-text">'+meaning+'。</div>'
+      +'</div>';
+  }).join('');
+}
+
+function renderUnmeiIndividual(sc,k,su,se){
+  const KYUSEI_DESC={1:'水の気を持ち、流れるように変化を読む力があります',2:'大地の気を持ち、人を支え育てる力があります',3:'木の気を持ち、新しいものを生み出す力があります',4:'風の気を持ち、縁をつなぎ広める力があります',5:'中央の土の気を持ち、変化の中心となる力があります',6:'天の気を持ち、高い理想と統率力があります',7:'金の気を持ち、喜びと豊かさを引き寄せる力があります',8:'山の気を持ち、蓄積と変革の力があります',9:'火の気を持ち、輝きと創造の力があります'};
+  const SUUHI_DESC={1:'先駆者として新しい道を切り開く使命',2:'協調と調和によって人と人をつなぐ使命',3:'創造と表現によって世界に喜びをもたらす使命',4:'着実な努力で物事を形にする使命',5:'自由と変化の中で多くを学び伝える使命',6:'愛と奉仕によって周囲を癒す使命',7:'深い洞察で真実を探求する使命',8:'大きな夢を現実に変える使命',9:'人類全体への奉仕と愛を体現する使命',11:'鋭い直感で霊的な知恵をもたらす使命',22:'壮大なビジョンを現実世界に実現する使命'};
+  const KAN_MEANING={'甲':'大樹のように力強く伸びる','乙':'しなやかに環境に適応する','丙':'太陽のように明るく照らす','丁':'灯火のように内から輝く','戊':'大地のように安定する','己':'土壌のように育みを与える','庚':'鉱石のように意志が固い','辛':'宝石のように繊細で鋭い','壬':'大河のように流動的','癸':'雨のように柔らかく浸透する'};
+  const SHI_MEANING={'子':'知恵と直感','丑':'忍耐と蓄積','寅':'勇気と行動力','卯':'柔軟性と縁','辰':'変化と龍の加護','巳':'洞察と変容','午':'情熱と表現','未':'思いやりと美','申':'機転と革新','酉':'審美眼と完成','戌':'誠実と守護','亥':'智慧と潜在力'};
+  return '<div class="individual-block">'
+    +'<div class="indiv-title">四 柱 推 命</div>'
+    +'<div class="indiv-data">日主：'+sc.ni.kan+sc.ni.shi+'　年柱：'+sc.nen.kan+sc.nen.shi+'　月柱：'+sc.tsu.kan+sc.tsu.shi+(sc.ji?'　時柱：'+sc.ji.kan+sc.ji.shi:'')+'</div>'
+    +'<div class="indiv-text">'+(KAN_MEANING[sc.ni.kan]||'独自の気質を持つ')+'傾向があります。'+(SHI_MEANING[sc.ni.shi]||'')+'の気質も持ち合わせています。</div>'
+    +'</div>'
+    +'<div class="individual-block">'
+    +'<div class="indiv-title">九 星 気 学</div>'
+    +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'</div>'
+    +'<div class="indiv-text">'+(KYUSEI_DESC[k.honmei]||'')+'。</div>'
+    +'</div>'
+    +'<div class="individual-block">'
+    +'<div class="indiv-title">数 秘 術</div>'
+    +'<div class="indiv-data">ライフパス：'+su.lifepath+'（'+(SUUHI_NAMES[su.lifepath]||'')+'）　誕生日数：'+su.birthday+'</div>'
+    +'<div class="indiv-text">'+(SUUHI_DESC[su.lifepath]||'')+'を持って生まれてきました。</div>'
+    +'</div>'
+    +'<div class="individual-block">'
+    +'<div class="indiv-title">姓 名 判 断</div>'
+    +'<div class="indiv-data">人格：'+se.jin+'　外格：'+se.gai+'　総格：'+se.sou+'　総画数：'+(se.seiS+se.meiS)+'画</div>'
+    +'<div class="indiv-text">人格数'+se.jin+'は対人関係における本質的な資質、総格'+se.sou+'は人生全体の運勢の流れを表しています。</div>'
+    +'</div>'
+    +'<div class="divhr"></div>'
+    +'<div class="result-lbl">総 合 鑑 定</div>';
+}
+
+function cleanMd(t){
+  return t
+    .replace(/^#{1,6}\s+.*/gm,'')
+    .replace(/^\*\*.+\*\*\s*$/gm,'')
+    .replace(/\*\*(.+?)\*\*/g,'$1')
+    .replace(/\*(.+?)\*/g,'$1')
+    .replace(/^[-\*]\s+/gm,'')
+    .replace(/^-{3,}$/gm,'')
+    .replace(/^={3,}$/gm,'')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
+}
+
+function renderNidan(text,targetId){
+  const el=document.getElementById(targetId);
+  if(!text){el.innerHTML='<span style="font-size:12px;color:rgba(220,215,200,0.9)">生成に失敗しました。再度お試しください。</span>';return;}
+  text=cleanMd(text);
+  const paras=text.split(/\n{2,}/).filter(p=>p.trim());
+  el.innerHTML=paras.map(para=>{
+    const lines=para.split('\n').map(l=>l.trim()).filter(l=>l);
+    if(lines.length>=2&&(lines[1].startsWith('解説：')||lines[1].startsWith('解説:'))){
+      const gen=lines[0];
+      const kai=lines.slice(1).join('').replace(/^解説[：:]\s*/,'');
+      return `<div class="nidan-block"><div class="nidan-gen">${gen}</div><div class="nidan-kai-label">解 説</div><div class="nidan-kai">${kai}</div></div>`;
+    }
+    return `<div class="nidan-block"><div class="nidan-kai">${lines.join('<br>')}</div></div>`;
+  }).join('');
+}
+
+// ── 鑑定生成 ──
+async function genUnmei(){
+  const key=cacheKey('unmei');
+  const cached=loadCache(key);
+  const sc=S.shicyu,k=S.kyusei,su=S.suuhi,se=S.seimei;
+  if(cached){
+    document.getElementById('unmei-msg').innerHTML=renderUnmeiIndividual(sc,k,su,se)+'<div id="unmei-sogo"></div>';
+    renderNidan(cached.text,'unmei-sogo');
+    document.getElementById('unmei-cache-note').textContent=`保存済みの鑑定（${cached.saved.slice(0,10)}）`;
+    return;
+  }
+  document.getElementById('unmei-msg').innerHTML=renderUnmeiIndividual(sc,k,su,se)+'<div id="unmei-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  const prompt=`【4つの占術が同時に示していること】
+・${sc.ni.kanEl}の本質と${sc.ni.shi}の気質を併せ持つ（四柱推命）
+・${KYUSEI[k.honmei-1]}として${KYUSEI_EL[k.honmei-1]}の力を体現している（九星気学）
+・ライフパス${su.lifepath}「${SUUHI_NAMES[su.lifepath]||''}」という魂の方向性（数秘術）
+・人格${se.jin}・総格${se.sou}という名の力（姓名判断）
+${S.gender?`・性別：${S.gender==='female'?'女性':'男性'}`:''}
+
+上記4つの占術がすべて一致して示している「この人の魂の核心」を、3段落で天啓として書いてください。
+
+段落1：この人が生まれ持った魂の本質と気質の核心
+段落2：この人が人生で繰り返し直面するテーマと、そこに宿る才能
+段落3：この人がこの世に果たすべき普遍の役割
+
+各段落は「古語の天啓（20字以内）」で始め、改行して「解説：300字以上の現代語で直接語りかける」を続けてください。
+占術名は使わず、4つが重なり合う唯一の真実だけを語ってください。`;
+  try{
+    const text=await callAPI(prompt,1500);
+    saveCache(key,{text});
+    renderNidan(text,'unmei-sogo');
+    document.getElementById('unmei-cache-note').textContent='鑑定結果をブラウザに保存しました';
+  }catch(e){showError('unmei-sogo',e.message||'生成に失敗しました');}
+}
+
+async function genKotoshi(){
+  const key=currentYearKey();
+  const cached=loadCache(key);
+  const t=S.today,y=yearMode==='next'?t.getFullYear()+1:t.getFullYear();
+  const sc=S.shicyu,k=S.kyusei,su=S.suuhi;
+  const cards=drawnCards.kotoshi.length?drawnCards.kotoshi:initTarot('kotoshi');
+  function buildHtml(){
+    return '<div class="individual-block"><div class="indiv-title">命 術</div>'
+      +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'（'+sc.ni.kanEl+'）　ライフパス：'+su.lifepath+'</div>'
+      +'<div class="indiv-text">'+y+'年の流れと、あなたの本質的な気質が交わります。</div></div>'
+      +renderTarotIndividual(cards)
+      +'<div class="divhr"></div><div class="result-lbl">総 合 鑑 定</div>';
+  }
+  if(cached){
+    if(cached.cards){drawnCards.kotoshi=cached.cards;renderTarotRow(cached.cards,'kotoshi-tarot-row');}
+    document.getElementById('kotoshi-msg').innerHTML=buildHtml()+'<div id="kotoshi-sogo"></div>';
+    renderNidan(cached.text,'kotoshi-sogo');
+    document.getElementById('kotoshi-cache-note').textContent=`保存済みの鑑定（${cached.saved.slice(0,10)}）`;return;
+  }
+  document.getElementById('kotoshi-msg').innerHTML=buildHtml()+'<div id="kotoshi-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  const prompt=`【${y}年の鑑定データが示していること】
+・命術：${sc.ni.kanEl}の本質を持つ${KYUSEI[k.honmei-1]}が、ライフパス${su.lifepath}（${SUUHI_NAMES[su.lifepath]||''}）として歩む${y}年
+・タロット5枚が示す${y}年の流れ：${tarotStr(cards)}
+
+これらが同時に示す「${y}年のあなたへの天啓」を3段落で書いてください。
+段落1：この年のテーマと本質（命術とタロット上半期・下半期が示す方向）
+段落2：この年に直面する試練と、そこに宿る才能（課題・才能のカードを統合）
+段落3：この年に天が示す意志と行動指針（天の意志のカードを統合）
+
+各段落は「古語の天啓（20字以内）」で始め、改行して「解説：250字以上の現代語」を続けてください。占術名は使わないでください。`;
+  try{
+    const text=await callAPI(prompt,1200);
+    saveCache(key,{text,cards});
+    renderNidan(text,'kotoshi-sogo');
+    document.getElementById('kotoshi-cache-note').textContent='鑑定結果をブラウザに保存しました';
+  }catch(e){showError('kotoshi-sogo',e.message||'生成に失敗しました');}
+}
+
+async function genKongetsu(){
+  const key=currentMonthKey();
+  const cached=loadCache(key);
+  const t=S.today;let y=t.getFullYear(),m=t.getMonth()+1;
+  if(monthMode==='next'){m++;if(m>12){m=1;y++;}}
+  const sc=S.shicyu,k=S.kyusei;
+  const cards=drawnCards.kongetsu.length?drawnCards.kongetsu:initTarot('kongetsu');
+  function buildHtml(){
+    return '<div class="individual-block"><div class="indiv-title">命 術</div>'
+      +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'（'+sc.ni.kanEl+'）</div>'
+      +'<div class="indiv-text">'+y+'年'+m+'月の気の流れとあなたの本質が交わります。</div></div>'
+      +renderTarotIndividual(cards)
+      +'<div class="divhr"></div><div class="result-lbl">総 合 鑑 定</div>';
+  }
+  if(cached){
+    if(cached.cards){drawnCards.kongetsu=cached.cards;renderTarotRow(cached.cards,'kongetsu-tarot-row');}
+    document.getElementById('kongetsu-msg').innerHTML=buildHtml()+'<div id="kongetsu-sogo"></div>';
+    renderNidan(cached.text,'kongetsu-sogo');
+    document.getElementById('kongetsu-cache-note').textContent=`保存済みの鑑定（${cached.saved.slice(0,10)}）`;return;
+  }
+  document.getElementById('kongetsu-msg').innerHTML=buildHtml()+'<div id="kongetsu-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  const prompt=`【${y}年${m}月の鑑定データが示していること】
+・命術：${sc.ni.kanEl}の本質を持つ${KYUSEI[k.honmei-1]}が迎える${y}年${m}月（${getSeason(m)}）
+・タロット3枚が示すこの月の流れ：${tarotStr(cards)}
+
+これらが同時に示す「${y}年${m}月のあなたへの天啓」を2〜3段落で書いてください。
+段落1：この月のテーマと気の流れ（テーマのカードと命術を統合）
+段落2：この月の転換点と行動指針（流れ・結末のカードを統合）
+
+各段落は「古語の天啓（20字以内）」で始め、改行して「解説：200字以上の現代語」を続けてください。占術名は使わないでください。`;
+  try{
+    const text=await callAPI(prompt,900);
+    saveCache(key,{text,cards});
+    renderNidan(text,'kongetsu-sogo');
+    document.getElementById('kongetsu-cache-note').textContent='鑑定結果をブラウザに保存しました';
+  }catch(e){showError('kongetsu-sogo',e.message||'生成に失敗しました');}
+}
+
+async function genKonshu(){
+  const key=currentWeekKey();
+  const cached=loadCache(key);
+  const t=S.today,target=weekMode==='next'?nextMonday(t):t;
+  const sc=S.shicyu,k=S.kyusei,lk=S.lucky,m=target.getMonth()+1;
+  const cards=drawnCards.konshu.length?drawnCards.konshu:initTarot('konshu');
+  function buildHtml(){
+    return '<div class="individual-block"><div class="indiv-title">命 術</div>'
+      +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'　吉方位：'+lk.dir+'　吉色：'+lk.color+'</div>'
+      +'<div class="indiv-text">今週の流れとあなたの本質が交わります。</div></div>'
+      +renderTarotIndividual(cards)
+      +'<div class="divhr"></div><div class="result-lbl">総 合 鑑 定</div>';
+  }
+  if(cached){
+    if(cached.cards){drawnCards.konshu=cached.cards;renderTarotRow(cached.cards,'konshu-tarot-row');}
+    document.getElementById('konshu-msg').innerHTML=buildHtml()+'<div id="konshu-sogo"></div>';
+    renderNidan(cached.text,'konshu-sogo');
+    document.getElementById('konshu-cache-note').textContent=`保存済みの鑑定（${cached.saved.slice(0,10)}）`;return;
+  }
+  document.getElementById('konshu-msg').innerHTML=buildHtml()+'<div id="konshu-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  const prompt=`【今週の鑑定データが示していること】
+・命術：${sc.ni.kanEl}の本質を持つ${KYUSEI[k.honmei-1]}が迎える今週（${getSeason(m)}・吉方位${lk.dir}・吉色${lk.color}）
+・タロット3枚が示す今週の流れ：${tarotStr(cards)}
+
+これらが同時に示す「今週のあなたへの天啓」を2段落で書いてください。
+段落1：今週の本質的な流れと意味（過去・現在のカードと命術を統合）
+段落2：今週の行動指針と具体的な一歩（未来のカードを統合・具体的な行動を必ず含める）
+
+各段落は「古語の天啓（20字以内）」で始め、改行して「解説：200字以上の現代語」を続けてください。占術名は使わないでください。`;
+  try{
+    const text=await callAPI(prompt,800);
+    saveCache(key,{text,cards});
+    renderNidan(text,'konshu-sogo');
+    document.getElementById('konshu-cache-note').textContent='鑑定結果をブラウザに保存しました';
+  }catch(e){showError('konshu-sogo',e.message||'生成に失敗しました');}
+}
+
+async function genToday(){
+  const t=S.today,target=dayMode==='next'?addDays(t,1):t;
+  const seed=mkSeed(S.birth,target);
+  const kk=drawKK(seed),lk=getLucky(seed),k=S.kyusei,m=target.getMonth()+1;
+  document.getElementById('today-date').textContent=`${target.getFullYear()}年${m}月${target.getDate()}日（${WD[target.getDay()]}）`;
+  document.getElementById('today-kichiku').innerHTML=`<div class="kichiku-wrap"><div class="kichiku-furi">${kk.furi}</div><div class="kichiku ${kk.cls}">${kk.label}</div><div class="kichiku-en">${kk.en}</div><div class="kyusei-badge">本命星：${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）</div></div>`;
+  document.getElementById('today-grid').innerHTML=`<div class="gitem"><div class="gl">今日の九星</div><div class="gv">${KYUSEI[k.todayK-1]}</div></div><div class="gitem"><div class="gl">ラッキーカラー</div><div class="gv">${lk.color}</div></div><div class="gitem"><div class="gl">吉 方 位</div><div class="gv">${lk.dir}</div></div><div class="gitem"><div class="gl">縁 起 物</div><div class="gv">${lk.item}</div></div>`;
+  const key=currentDayKey();
+  const cached=loadCache(key);
+  const cards=drawnCards.today.length?drawnCards.today:initTarot('today');
+  renderTarotRow(cards,'today-tarot-row');
+  const tarotIndiv=renderTarotIndividual(cards);
+  if(cached){
+    if(cached.cards){drawnCards.today=cached.cards;renderTarotRow(cached.cards,'today-tarot-row');}
+    document.getElementById('today-msg').innerHTML=renderTarotIndividual(drawnCards.today)+'<div class="divhr"></div><div class="result-lbl">今 日 の 言 葉</div><div id="today-kotoba"></div>';
+    renderTodayKotoba(cached.text);return;
+  }
+  document.getElementById('today-msg').innerHTML=tarotIndiv+'<div class="divhr"></div><div class="result-lbl">今 日 の 言 葉</div><div id="today-kotoba"><span class="dots"><span></span><span></span><span></span></span></div>';
+  const prompt=`【${dayMode==='next'?'明日':'今日'}の鑑定データが示していること】
+・命術：${sc.ni.kanEl}の本質を持つ${KYUSEI[k.honmei-1]}が迎える${dayMode==='next'?'明日':'今日'}
+・今日の気の流れ：${kk.label}（${kk.furi}）、${WD[target.getDay()]}曜日、${getSeason(m)}
+・吉方位：${lk.dir}、吉色：${lk.color}、縁起物：${lk.item}
+・タロットが示す今日の主題：${tarotStr(cards)}
+
+これらが同時に示す「${dayMode==='next'?'明日':'今日'}のあなたへの天啓」を以下の形式で書いてください。
+各項目は占術の解説をせず、すべてを統合した上で直接語りかけてください。
+
+願望：（古語の天啓・20字以内）
+解説：（200字以上・願いや思いへの天啓として語りかける）
+仕事：（古語の天啓・20字以内）
+解説：（200字以上・仕事や使命への天啓として語りかける）
+対人：（古語の天啓・20字以内）
+解説：（200字以上・人との関わりへの天啓として語りかける）
+健康：（古語の天啓・20字以内）
+解説：（200字以上・心身への天啓として語りかける）
+一言：（今日という日の本質を一言で表す言葉）`;
+  try{
+    const text=await callAPI(prompt,600);
+    saveCache(key,{text,cards});
+    renderTodayKotoba(text);
+  }catch(e){showError('today-kotoba',e.message||'生成に失敗しました');}
+}
+
+function renderTodayKotoba(text){
+  text=cleanMd(text);
+  const el=document.getElementById('today-kotoba')||document.getElementById('today-msg');
+  if(!el)return;
+  const keys=['願望','仕事','対人','健康'],icons=['◈','◇','◉','◎'];
+  const parsed={};let ichigon='';
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  let currentKey=null;
+  for(const line of lines){
+    for(let i=0;i<keys.length;i++){
+      if(line.startsWith(keys[i]+'：')||line.startsWith(keys[i]+':')){
+        currentKey=keys[i];
+        parsed[currentKey]={gen:line.replace(/^[^：:]+[：:]\s*/,''),kai:''};
+        break;
+      }
+    }
+    if((line.startsWith('解説：')||line.startsWith('解説:'))&&currentKey&&parsed[currentKey])
+      parsed[currentKey].kai=line.replace(/^解説[：:]\s*/,'');
+    if(line.startsWith('一言：')||line.startsWith('一言:'))
+      ichigon=line.replace(/^一言[：:]\s*/,'');
+  }
+  const hasAll=keys.every(k=>parsed[k]&&parsed[k].gen);
+  if(!hasAll){el.innerHTML=`<div class="result-text">${text.replace(/\n/g,'<br>')}</div>`;return;}
+  el.innerHTML=`<div class="kotoba-items">${keys.map((k,i)=>`
+    <div class="kotoba-item">
+      <div class="kotoba-item-label">${icons[i]} ${k}</div>
+      <div class="kotoba-item-gen">${parsed[k].gen}</div>
+      ${parsed[k].kai?`<div class="kotoba-kai-label">解 説</div><div class="kotoba-item-kai">${parsed[k].kai}</div>`:''}
+    </div>`).join('')}</div>${ichigon?`<div class="ichigon-box"><div class="ichigon-lbl">今 日 の 一 言</div><div class="ichigon-text">${ichigon}</div></div>`:''}`;
+}
+
+function genTodayIfNeeded(){
+  const key=currentDayKey();
+  const cached=loadCache(key);
+  if(cached){
+    const t=S.today,target=dayMode==='next'?addDays(t,1):t;
+    const seed=mkSeed(S.birth,target);
+    const kk=drawKK(seed),lk=getLucky(seed),k=S.kyusei,m=target.getMonth()+1;
+    document.getElementById('today-date').textContent=`${target.getFullYear()}年${m}月${target.getDate()}日（${WD[target.getDay()]}）`;
+    document.getElementById('today-kichiku').innerHTML=`<div class="kichiku-wrap"><div class="kichiku-furi">${kk.furi}</div><div class="kichiku ${kk.cls}">${kk.label}</div><div class="kichiku-en">${kk.en}</div><div class="kyusei-badge">本命星：${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）</div></div>`;
+    document.getElementById('today-grid').innerHTML=`<div class="gitem"><div class="gl">今日の九星</div><div class="gv">${KYUSEI[k.todayK-1]}</div></div><div class="gitem"><div class="gl">ラッキーカラー</div><div class="gv">${lk.color}</div></div><div class="gitem"><div class="gl">吉 方 位</div><div class="gv">${lk.dir}</div></div><div class="gitem"><div class="gl">縁 起 物</div><div class="gv">${lk.item}</div></div>`;
+    if(cached.cards){drawnCards.today=cached.cards;renderTarotRow(cached.cards,'today-tarot-row');}
+    document.getElementById('today-msg').innerHTML=renderTarotIndividual(drawnCards.today||[])+'<div class="divhr"></div><div class="result-lbl">今 日 の 言 葉</div><div id="today-kotoba"></div>';
+    renderTodayKotoba(cached.text);
+  } else {
+    genToday();
+  }
+}
+
+async function genKobetsu(){
+  const theme=document.getElementById('kobetsu-theme').value;
+  const q=document.getElementById('kobetsu-q').value;
+  const cards=drawnCards.kobetsu.length?drawnCards.kobetsu:initTarot('kobetsu');
+  renderTarotRow(cards,'kobetsu-tarot-row');
+  const sc=S.shicyu,k=S.kyusei,su=S.suuhi;
+  const indivHtml='<div class="individual-block"><div class="indiv-title">命 術</div>'
+    +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'（'+sc.ni.kanEl+'）　ライフパス：'+su.lifepath+'（'+(SUUHI_NAMES[su.lifepath]||'')+'）</div>'
+    +'<div class="indiv-text">「'+theme+'」というテーマと、あなたの本質的な気質が交わります。</div></div>'
+    +renderTarotIndividual(cards)
+    +'<div class="divhr"></div><div class="result-lbl">総 合 鑑 定</div>';
+  document.getElementById('kobetsu-msg').innerHTML=indivHtml+'<div id="kobetsu-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  const prompt=`【「${theme}」についての鑑定データが示していること】
+・命術：${sc.ni.kanEl}の本質を持つ${KYUSEI[k.honmei-1]}、ライフパス${su.lifepath}（${SUUHI_NAMES[su.lifepath]||''}）
+・タロット3枚が示す「${theme}」の状況：${tarotStr(cards)}
+${q?`・相談者の状況：${q}`:''}
+
+これらが同時に示す「${theme}」についての天啓を3段落で書いてください。
+段落1：現状の本質と、そこに隠れている真実（現状・障害のカードと命術を統合）
+段落2：突破口となる視点と才能（指針のカードを統合）
+段落3：今すぐ踏み出せる具体的な一歩（必ず具体的な行動を含める）
+
+各段落は「古語の天啓（20字以内）」で始め、改行して「解説：200字以上の現代語」を続けてください。占術名は使わないでください。`;
+  try{
+    const text=await callAPI(prompt,1000);
+    renderNidan(text,'kobetsu-sogo');
+    document.getElementById('kobetsu-pdf').style.display='block';
+  }catch(e){showError('kobetsu-sogo',e.message||'生成に失敗しました');}
+}
+
+// ── PDF ──
+function genPDF(title){
+  const t=S.today;
+  const dt=`${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}`;
+  document.title=`命鏡_${title}_${S.name}_${dt}`;
+  window.print();
+  document.title='命鏡 — AI統合鑑定';
+}
+
+// ── タブ切替 ──
+const TABS=['unmei','kotoshi','kongetsu','konshu','today','kobetsu','kanteishi'];
+function showTab(name){
+  TABS.forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
+  document.querySelectorAll('#tabs .btn-sm').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===name);});
+  if(name==='today'){initTarotIfEmpty('today');genTodayIfNeeded();}
+  if(name==='kotoshi'){initTarotIfEmpty('kotoshi');}
+  if(name==='kongetsu'){initTarotIfEmpty('kongetsu');}
+  if(name==='konshu'){initTarotIfEmpty('konshu');}
+  if(name==='kobetsu'){initTarotIfEmpty('kobetsu');}
+  if(name==='kanteishi'){renderKanteishi();}
+}
+
+// ── 開始・リセット ──
+function startReading(){
+  const name=document.getElementById('inp-name').value.trim();
+  const bv=document.getElementById('inp-birth').value;
+  if(!name||!bv){alert('お名前と生年月日をご入力ください');return;}
+  S.name=name;S.birthStr=bv;S.birth=new Date(bv+'T00:00:00');S.hour=document.getElementById('inp-hour').value;S.gender=document.getElementById('inp-gender').value;S.today=new Date();
+  const seed=mkSeed(S.birth,S.today);
+  S.kk=drawKK(seed);S.lucky=getLucky(seed);
+  S.shicyu=calcShicyu(S.birth,S.hour);S.kyusei=calcKyusei(S.birth);S.suuhi=calcSuuhi(S.birth);S.seimei=calcSeimei(name);
+  drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
+  try{localStorage.setItem('mk_profile',JSON.stringify({name,birth:bv,hour:S.hour,gender:S.gender}));}catch(e){}
+  const t=S.today;
+  document.getElementById('kotoshi-title').textContent=`${t.getFullYear()}年 の 指 針`;
+  document.getElementById('kongetsu-title').textContent=`${t.getFullYear()}年${t.getMonth()+1}月 の 流 れ`;
+  document.getElementById('konshu-title').textContent=`${t.getFullYear()}年${t.getMonth()+1}月 第${getWeekNum(t)}週 の 気 流`;
+  document.getElementById('input-area').style.display='none';
+  document.getElementById('main-panel').style.display='block';
+  // 天命タブを表示し自動で鑑定
+  TABS.forEach(t=>{document.getElementById('tab-'+t).style.display=t==='unmei'?'block':'none';});
+  document.querySelectorAll('#tabs .btn-sm').forEach((b,i)=>{b.classList.toggle('active',TABS[i]==='unmei');});
+  genUnmei();
+}
+
+// ── 鑑定師からのメッセージ ──
+const RYU_COLORS_USER=[
+  {name:'透明',hex:'#e8e8e8'},{name:'金',hex:'#ffd700'},{name:'銀',hex:'#c0c0c0'},
+  {name:'虹',hex:'#f6bfbc'},{name:'白',hex:'#ffffff'},{name:'薄灰',hex:'#cccccc'},
+  {name:'灰',hex:'#999999'},{name:'濃灰',hex:'#666666'},{name:'黒',hex:'#000000'},
+  {name:'紫',hex:'#800080'},{name:'菫',hex:'#7058a3'},{name:'ラベンダー',hex:'#cab8d9'},
+  {name:'ライラック',hex:'#d1bada'},{name:'藤',hex:'#bbbcde'},{name:'青紫',hex:'#674598'},
+  {name:'紺',hex:'#223a70'},{name:'藍',hex:'#165e83'},{name:'群青',hex:'#4c6cb3'},
+  {name:'青',hex:'#0095d9'},{name:'空',hex:'#a0d8ef'},{name:'ターコイズブルー',hex:'#00afcc'},
+  {name:'水',hex:'#bce2e8'},{name:'青緑',hex:'#00a497'},{name:'深緑',hex:'#00552e'},
+  {name:'緑',hex:'#3eb370'},{name:'エメラルドグリーン',hex:'#00a968'},{name:'鶯',hex:'#928c36'},
+  {name:'黄緑',hex:'#b8d200'},{name:'黄',hex:'#ffd900'},{name:'クリームイエロー',hex:'#fff3b8'},
+  {name:'レモンイエロー',hex:'#fff352'},{name:'橙',hex:'#ee7800'},{name:'朱',hex:'#eb6101'},
+  {name:'レッド',hex:'#ea5550'},{name:'ローズレッド',hex:'#ea618e'},{name:'桃',hex:'#f09199'},
+  {name:'サーモンピンク',hex:'#f3a68c'},{name:'桜',hex:'#ffdbed'},{name:'ベージュ',hex:'#eedcb3'},
+  {name:'茶',hex:'#965042'},{name:'栗',hex:'#762f07'},{name:'焦茶',hex:'#594639'},
+];
+
+function getRyuTextColor(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return(0.299*r+0.587*g+0.114*b)/255>0.5?'#111111':'#ffffff';
+}
+
+function kanteishiKey(){return 'kanteishi_'+(S.birthStr||localDate(S.birth));}
+function birthKey(){return S.birthStr||localDate(S.birth);}
+
+async function renderKanteishi(){
+  const el=document.getElementById('kanteishi-content');
+  el.innerHTML='<div style="text-align:center;padding:24px;"><span class="dots"><span></span><span></span><span></span></span></div>';
+  const key=kanteishiKey();
+  const requestKey=key+'_request';
+  // Supabaseから取得
+  let data=null;
+  try{
+    const res=await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/get',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({birth_key:birthKey()})
+    });
+    data=await res.json();
+  }catch(e){
+    // フォールバック：localStorage
+    try{data=JSON.parse(localStorage.getItem(key)||'null');}catch(e2){}
+  }
+  const requested=data?true:localStorage.getItem(requestKey);
+
+  // 提供済み
+  // Supabaseのフィールド名（snake_case）をキャメルケースに変換
+  if(data){
+    if(!data.ryuList&&data.ryu_list)data.ryuList=data.ryu_list;
+    if(!data.ryuDate&&data.ryu_date)data.ryuDate=data.ryu_date;
+    if(!data.ryuMessage&&data.ryu_message)data.ryuMessage=data.ryu_message;
+    if(!data.editTheme&&data.edit_theme)data.editTheme=data.edit_theme;
+  }
+  if(data&&data.status==='provided'){
+    if(data.mode==='ryu'&&data.ryuList&&data.ryuList.length){
+      el.innerHTML=renderRyuKanteishi(data);
+    } else if(data.text){
+      el.innerHTML=`
+        <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">
+          鑑定日：${data.date||''}　テーマ：${data.editTheme||data.theme||''}
+        </div>
+        <div id="kanteishi-text"></div>
+        <div class="divhr"></div>
+        <button class="btn-pdf" onclick="genPDF('鑑定師からのメッセージ')">✦ PDFで保存する</button>`;
+      renderNidan(data.text,'kanteishi-text');
+    }
+    return;
+  }
+
+  // 依頼済み・準備中
+  if(requested){
+    el.innerHTML=`
+      <div style="text-align:center;padding:28px 0;">
+        <div style="font-size:28px;color:rgba(200,195,180,0.6);margin-bottom:14px;">✦</div>
+        <div style="font-size:14px;color:rgba(228,223,208,0.95);line-height:2;">鑑定の準備を進めております。<br>今しばらくお待ちください。</div>
+        <div style="font-size:11px;color:rgba(200,195,180,0.7);margin-top:10px;letter-spacing:.1em;">依頼日：${new Date(parseInt(requested)).toLocaleDateString('ja-JP')}</div>
+      </div>`;
+    return;
+  }
+
+  // 未依頼
+  el.innerHTML=`
+    <div style="font-size:14px;color:rgba(230,226,218,0.95);line-height:2;margin-bottom:16px;">
+      あなたに付い（ツイ）ている龍がいるか、<br>
+      いるなら何色が何体いるのかを鑑定します。<br>
+      鑑定師・みっつぅが直接鑑定してお届けします。
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(200,168,75,0.2);padding:14px;margin-bottom:16px;font-size:13px;color:rgba(230,226,218,0.95);line-height:2;">
+      ・鑑定内容：ツイてる龍 42色鑑定<br>
+      ・納期：ご依頼から3〜5営業日<br>
+      ・ご依頼後、別途お支払い案内をお送りします
+    </div>
+    <div style="background:rgba(200,168,75,0.05);border:0.5px solid rgba(200,168,75,0.25);padding:14px;margin-bottom:8px;">
+      <div style="font-size:12px;font-weight:700;color:#dfc070;letter-spacing:.15em;margin-bottom:10px;">目的と注意事項（ご確認ください）</div>
+      <div style="font-size:12px;color:rgba(230,226,218,0.9);line-height:2;max-height:200px;overflow-y:auto;padding-right:4px;scrollbar-color:#c8a84b rgba(255,255,255,0.1);scrollbar-width:thin;">
+        <p style="margin-bottom:7px;">1. ツイてる龍４２色鑑定（以下「本鑑定」という）は、架空生物である「龍」を身近に感じて遊び感覚で開運するために個人が愉しむことが目的のツールです。本鑑定結果によって得られる利益を保証するものではなく、また本鑑定結果によって不利益等を被った場合でも何ら補償することもできないため、全て自己判断でご活用いただくツールとして予めご理解ご了承ください。</p>
+        <p style="margin-bottom:7px;">2. 龍の存在は、現代科学等において客観的に証明することができていないものであり、本鑑定結果も龍の存在を確定するためのものではないことを予めご理解ご了承ください。</p>
+        <p style="margin-bottom:7px;">3. 本鑑定方法は、私みっつぅがオリジナルで考案したものであり、貴方に龍が付いているかを鑑定している他の方の鑑定結果と龍の数や色等が異なる場合があります。鑑定した方の鑑定結果を否定するものではなく、またセカンドオピニオンなども承っていないことを予めご了承ください。</p>
+        <p style="margin-bottom:7px;">4. 以下に示す定義及び接し方について、提唱する内容が異なったり、意見が違うことがありますが、その方のご主張を否定するものではないので、貴方がどちらを採用されるかご自身でご決定いただければと存じます。</p>
+        <p style="margin-bottom:7px;">5. 本鑑定のキャンセル・返金は、鑑定結果のご提供後はお受けできません。ご依頼前に十分ご検討の上お申し込みください。</p>
+        <p style="margin-bottom:7px;">6. 本鑑定結果（鑑定書の内容・画像等）のSNSや他媒体への無断転載・二次利用はお断りしております。個人の記録・保管目的での使用に限りご利用ください。</p>
+        <p style="margin-bottom:7px;">7. 未成年者（18歳未満）の方がご依頼される場合は、保護者の同意を得た上でお申し込みください。</p>
+        <p style="margin-bottom:7px;">8. 本鑑定は占いであり、医療行為・心理療法・法律的助言の代替にはなりません。体調・精神状態に不安がある場合は、専門の医療機関にご相談ください。</p>
+        <p style="margin-bottom:7px;">9. ご依頼の際にご提供いただいた個人情報（お名前・生年月日・ご連絡先等）は、鑑定目的のみに使用し、第三者への提供は行いません。</p>
+        <p>10. 本鑑定はエンターテインメントを目的としたものです。鑑定結果を人生における重要な判断（転職・結婚・投資等）の唯一の根拠とすることはお控えください。</p>
+      </div>
+    </div>
+    <div style="font-size:12px;color:rgba(215,205,175,0.9);line-height:1.9;margin-bottom:14px;text-align:center;padding:10px 8px;background:rgba(200,100,80,0.08);border:0.5px solid rgba(200,100,80,0.3);">
+      <span style="font-size:16px;margin-right:6px;">⚠️</span>上記の注意事項を十分にご確認ください。<br>
+      「鑑定を依頼する」ボタンをクリックすることで、<br>上記の注意事項に<strong style="color:#e8d280;">同意したもの</strong>とみなします。
+    </div>
+    <button class="btn-main" onclick="sendRequest()">鑑 定 を 依 頼 す る</button>`;
+}
+
+function renderRyuKanteishi(data){
+  const list=data.ryuList||[];
+  const page1=list.slice(0,10);
+  const page2=list.slice(10);
+
+  function tableRows(rows,offset){
+    const bk=kanteishiKey();
+    return rows.map((row,i)=>{
+      const c=RYU_COLORS_USER[row.colorIdx]||{name:'',hex:'#888888'};
+      const tc=getRyuTextColor(c.hex);
+      const idx=offset+i;
+      const savedKey='ryu_name_'+bk+'_'+idx;
+      const savedName=localStorage.getItem(savedKey)||'';
+      const escapedBk=bk.replace(/'/g,"\'");
+      return '<tr>'
+        +'<td class="ryu-td ryu-num-col" style="text-align:center;font-weight:700;color:var(--gold2);padding:6px 4px;">'+(idx+1)+'</td>'
+        +'<td class="ryu-td" style="padding:4px;"><div class="ryu-color-badge" style="background:'+c.hex+';color:'+tc+';padding:5px 10px;text-align:center;font-size:12px;font-weight:500;border-radius:2px;">'+c.name+'</div></td>'
+        +'<td class="ryu-td ryu-val" style="text-align:center;padding:4px;font-size:13px;color:var(--parch2);">'+row.en+'</td>'
+        +'<td class="ryu-td ryu-val" style="text-align:center;padding:4px;font-size:13px;color:var(--parch2);">'+row.ki+'</td>'
+        +'<td class="ryu-td ryu-val" style="text-align:center;padding:4px;font-size:13px;color:var(--parch2);">'+row.iy+'</td>'
+        +'<td class="ryu-td ryu-val" style="text-align:center;padding:4px;font-size:13px;color:var(--parch2);">'+row.jo+'</td>'
+        +'<td class="ryu-td ryu-val" style="text-align:center;padding:4px;font-size:13px;color:var(--parch2);">'+row.ke+'</td>'
+        +'<td class="ryu-td ryu-val" style="text-align:center;padding:4px;font-size:13px;color:var(--parch2);">'+row.eg+'</td>'
+        +'<td class="ryu-td" style="padding:4px;min-width:100px;">'
+        +'<input type="text" value="'+savedName.replace(/"/g,'&quot;')+'" placeholder="名前を付ける" data-key="'+savedKey+'" onchange="localStorage.setItem(this.dataset.key,this.value)" '
+        +'style="width:100%;background:rgba(255,255,255,0.05);border:0.5px solid rgba(200,168,75,0.25);color:var(--parch);font-family:inherit;font-size:12px;padding:4px 8px;outline:none;">'
+        +'</td>'
+        +'</tr>';
+    }).join('');
+  }
+
+  function tableHtml(rows,offset){
+    return `<div style="overflow-x:auto;margin-bottom:20px;">
+      <table class="ryu-print-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr class="ryu-print-head" style="border-bottom:0.5px solid rgba(200,195,180,0.6);">
+            <th class="ryu-th" style="padding:7px 4px;color:var(--gold);font-size:10px;letter-spacing:.1em;text-align:center;">#</th>
+            <th class="ryu-th" style="padding:7px 8px;color:var(--gold);font-size:10px;letter-spacing:.1em;text-align:center;min-width:90px;">色</th>
+            <th class="ryu-th" style="padding:7px 4px;color:var(--gold);font-size:10px;letter-spacing:.08em;text-align:center;">縁結び</th>
+            <th class="ryu-th" style="padding:7px 4px;color:var(--gold);font-size:10px;letter-spacing:.08em;text-align:center;">金運上昇</th>
+            <th class="ryu-th" style="padding:7px 4px;color:var(--gold);font-size:10px;letter-spacing:.08em;text-align:center;">癒し</th>
+            <th class="ryu-th" style="padding:7px 4px;color:var(--gold);font-size:10px;letter-spacing:.08em;text-align:center;">浄化</th>
+            <th class="ryu-th" style="padding:7px 4px;color:var(--gold);font-size:10px;letter-spacing:.08em;text-align:center;">結界</th>
+            <th class="ryu-th" style="padding:7px 4px;color:var(--gold);font-size:10px;letter-spacing:.08em;text-align:center;">エネ調整</th>
+            <th class="ryu-th" style="padding:7px 8px;color:var(--gold);font-size:10px;letter-spacing:.1em;text-align:center;">名前</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows(rows,offset)}</tbody>
+      </table>
+    </div>`;
+  }
+
+  const header=`
+    <div style="text-align:center;margin-bottom:16px;">
+      <div class="ryu-date-label" style="font-size:11px;color:rgba(220,215,200,0.9);letter-spacing:.15em;">鑑定日：${data.ryuDate||data.date||''}</div>
+    </div>
+    <div class="ryu-count-area" style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(180,175,165,0.5);">
+      <div>
+        <div class="ryu-count-label-text" style="font-size:11px;color:rgba(220,215,200,0.9);letter-spacing:.1em;margin-bottom:3px;">ツイてる龍の数</div>
+        <div class="ryu-count-num" style="font-size:24px;font-weight:800;color:var(--gold2);">${list.length} 体</div>
+      </div>
+    </div>
+    <div class="ryu-name-hint" style="font-size:11px;color:rgba(215,210,195,0.85);line-height:1.8;margin-bottom:16px;">
+      ✦ 名前の欄に、龍それぞれの名前を付けてあげてください。名前は自動で保存されます。
+    </div>`;
+
+  const p1=tableHtml(page1,0);
+  const p2=page2.length?`
+    <div style="margin-top:20px;padding-top:16px;border-top:0.5px solid rgba(180,175,165,0.5);">
+      ${tableHtml(page2,10)}
+    </div>`:'';
+
+  const message=data.ryuMessage?`
+    <div style="margin-top:20px;padding:16px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(180,175,165,0.5);">
+      <div style="font-size:10px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;">鑑 定 師 よ り</div>
+      <div style="font-size:13px;color:var(--parch2);line-height:2;">${data.ryuMessage.replace(/\n/g,'<br>')}</div>
+    </div>`:'';
+
+
+  const notes = `
+  <div style="margin-top:24px;">
+    <div class="ryu-notes-title" style="font-size:13px;font-weight:700;color:var(--gold2);letter-spacing:.15em;margin-bottom:12px;">定義と接し方</div>
+    <div class="ryu-notes-text" style="font-size:12px;color:rgba(230,226,218,0.9);line-height:2.1;padding:14px 16px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(200,168,75,0.18);">
+      <p style="margin-bottom:10px;">1. 本鑑定で定義する「龍」とは、神様の眷属としての存在であり、「龍神」は神様であるため、「龍」の姿をしていたとしても別の存在と定義しています。</p>
+      <p style="margin-bottom:10px;">2. 龍は、崇め奉ったり畏れたりするような貴方より高位の存在ではなく、いつも隣にいたり、ときには遠くへ行ったりして、貴方のことを様々な場面でサポートしてくれる大切な家族や親友だと思って接し、願いが叶ったり、危険を回避できたと感じたときには、名前を呼んで、愛のある感謝の氣持ちを伝えるようにしてください。声に出せないときは、心の中で伝えるだけでも大丈夫です。その感謝の氣持ちが龍のエネルギーとなって成長してくれます。</p>
+      <p style="margin-bottom:10px;">3. 龍は、成長して大きくなったり、色変わりしたり、分裂したり、他の龍と合体したりします。貴方の精神的な成長や愛のエネルギーが、龍に必要な成長や変化を促しますので、龍の数を増やすことよりもお互いに成長するパートナーとして付き合ってください。</p>
+      <p style="margin-bottom:10px;">4. 龍は、貴方に存在を忘れられると、元氣がなくなったり、あまりないですが貴方の元から去ってしまうことも稀にあります。是非、忘れないようにするためにも名前を付けてあげてください。色変わりする可能性がありますので、鑑定結果の色に引っ張られない（黒龍だから「クロ」は避ける）よう名付けてください。また、性別はありませんので、かっこいい名前でもかわいらしい名前でもＯＫです。呼ぶときは、「様」などを付けず、「さん」、「くん」、「ちゃん」、呼び捨てなど親しみを籠めて呼んであげてください。</p>
+      <p>5. 縁結び〜エネルギー調整の欄に記載されている数値は、貴方の龍の能力を０〜１０の１１段階で表した目安です。得意な能力を活かして助けてもらったり、不得意な能力が成長するよう他の龍のお手伝いをさせたりして、龍を成長させてあげてください。</p>
+    </div>
+  </div>
+  <div style="margin-top:16px;">
+    <button class="accordion-btn" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.acc-arrow').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
+      <span>目的と注意事項</span><span class="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-content">
+      <p style="margin-bottom:8px;">1. ツイてる龍４２色鑑定（以下「本鑑定」という）は、架空生物である「龍」を身近に感じて遊び感覚で開運するために個人が愉しむことが目的のツールです。本鑑定結果によって得られる利益を保証するものではなく、また本鑑定結果によって不利益等を被った場合でも何ら補償することもできないため、全て自己判断でご活用いただくツールとして予めご理解ご了承ください。</p>
+      <p style="margin-bottom:8px;">2. 龍の存在は、現代科学等において客観的に証明することができていないものであり、本鑑定結果も龍の存在を確定するためのものではないことを予めご理解ご了承ください。</p>
+      <p style="margin-bottom:8px;">3. 本鑑定方法は、私みっつぅがオリジナルで考案したものであり、貴方に龍が付いているかを鑑定している他の方の鑑定結果と龍の数や色等が異なる場合があります。鑑定した方の鑑定結果を否定するものではなく、またセカンドオピニオンなども承っていないことを予めご了承ください。</p>
+      <p style="margin-bottom:8px;">4. 以下に示す定義及び接し方について、提唱する内容が異なったり、意見が違うことがありますが、その方のご主張を否定するものではないので、貴方がどちらを採用されるかご自身でご決定いただければと存じます。</p>
+      <p style="margin-bottom:8px;">5. 本鑑定のキャンセル・返金は、鑑定結果のご提供後はお受けできません。ご依頼前に十分ご検討の上お申し込みください。</p>
+      <p style="margin-bottom:8px;">6. 本鑑定結果（鑑定書の内容・画像等）のSNSや他媒体への無断転載・二次利用はお断りしております。個人の記録・保管目的での使用に限りご利用ください。</p>
+      <p style="margin-bottom:8px;">7. 未成年者（18歳未満）の方がご依頼される場合は、保護者の同意を得た上でお申し込みください。</p>
+      <p style="margin-bottom:8px;">8. 本鑑定は占いであり、医療行為・心理療法・法律的助言の代替にはなりません。体調・精神状態に不安がある場合は、専門の医療機関にご相談ください。</p>
+      <p style="margin-bottom:8px;">9. ご依頼の際にご提供いただいた個人情報（お名前・生年月日・ご連絡先等）は、鑑定目的のみに使用し、第三者への提供は行いません。</p>
+      <p>10. 本鑑定はエンターテインメントを目的としたものです。鑑定結果を人生における重要な判断（転職・結婚・投資等）の唯一の根拠とすることはお控えください。</p>
+    </div>
+  </div>`;
+
+  return header+p1+p2+message+notes+`
+    <div class="divhr"></div>
+    <button class="btn-pdf" onclick="genPDF('ツイてる龍鑑定書')">✦ PDFで保存する</button>`;
+}
+
+async function sendRequest(){
+  const birth=S.birthStr||localDate(S.birth);
+  const name=S.name||'依頼者';
+  const bkForSupabase=birthKey();
+  // Supabaseに保存
+  try{
+    await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/request',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({birth_key:bkForSupabase,name,birth})
+    });
+  }catch(e){console.log('Supabase保存失敗',e);}
+  // localStorageにも保存（後方互換）
+  const requestKey=birthKey+'_request';
+  localStorage.setItem(requestKey,Date.now().toString());
+  // Chatwork通知
+  await notifyChatwork('【龍鑑定依頼】\n生年月日：'+birth+'\n依頼日時：'+new Date().toLocaleString('ja-JP'));
+  renderKanteishi();
+}
+
+async function notifyChatwork(message){
+  const workerUrl='https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/chatwork';
+  try{
+    await fetch(workerUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message})
+    });
+  }catch(e){console.log('Chatwork通知失敗',e);}
+}
+async function notifyEmail(data){
+  const serviceId=window.EJ_SERVICE||'';
+  const templateId=window.EJ_TEMPLATE||'';
+  const publicKey=window.EJ_KEY||'';
+  if(!serviceId||!templateId||!publicKey)return;
+  try{
+    await emailjs.send(serviceId,templateId,{
+      to_name:'岩﨑 満',
+      from_name:data.name,
+      birth:data.birth,
+      theme:data.theme,
+      contact:data.contact,
+      message:`鑑定依頼が届きました。
+氏名：${data.name}
+生年月日：${data.birth}
+テーマ：${data.theme}
+連絡先：${data.contact}`
+    },publicKey);
+  }catch(e){console.log('EmailJS通知失敗',e);}
+}
+
+function resetAll(){
+  document.getElementById('main-panel').style.display='none';
+  document.getElementById('input-area').style.display='block';
+  ['inp-name','inp-birth','inp-hour'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inp-gender').value='';
+  yearMode='now';monthMode='now';weekMode='now';dayMode='now';
+  drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
+  S={name:'',birth:null,hour:'',gender:'',shicyu:null,kyusei:null,suuhi:null,seimei:null,today:null,kk:null,lucky:null};
+}
+
+// プロフィール復元
+(function(){
+  try{
+    const p=localStorage.getItem('mk_profile');
+    if(p){const d=JSON.parse(p);['inp-name','inp-birth','inp-hour','inp-gender'].forEach((id,i)=>{document.getElementById(id).value=[d.name,d.birth,d.hour,d.gender][i]||'';});}
+  }catch(e){}
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+// ── 外部サービス設定 ──
+// EmailJS設定（admin.htmlと同じ値を設定してください）
+window.EJ_SERVICE      = '';  // EmailJS Service ID
+window.EJ_TEMPLATE     = '';  // EmailJS Template ID
+window.EJ_KEY          = '';  // EmailJS Public Key
+// Chatwork Worker設定
+window.CW_WORKER_URL   = 'https://unmei-chatwork.mitzuryu-happinessroom.workers.dev';  // Cloudflare Worker URL
+</script>
+</body>
+</html>
