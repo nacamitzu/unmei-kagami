@@ -104,6 +104,10 @@ select.inp option{background:#0e0b07;}
 .accordion-btn:hover{background:rgba(200,168,75,0.06);}
 .accordion-content{display:none;padding:14px 16px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(200,168,75,0.18);border-top:none;font-size:12px;color:rgba(230,226,218,0.9);line-height:2.1;}
 .accordion-content.open{display:block;}
+.history-item{margin-bottom:8px;border:0.5px solid rgba(200,168,75,0.2);background:rgba(255,255,255,0.03);}
+.history-date{padding:10px 14px;font-size:13px;color:#dfc070;cursor:pointer;letter-spacing:.05em;}
+.history-date:hover{background:rgba(200,168,75,0.06);}
+.history-detail{padding:0 14px 14px;}
 /* スクロールバー */
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:rgba(255,255,255,0.08);border-radius:3px;}
@@ -1522,12 +1526,15 @@ async function renderKanteishi(){
   const requested=data?true:localStorage.getItem(requestKey);
 
   // 提供済み
-  // Supabaseのフィールド名（snake_case）をキャメルケースに変換
   if(data){
     if(!data.ryuList&&data.ryu_list)data.ryuList=data.ryu_list;
     if(!data.ryuDate&&data.ryu_date)data.ryuDate=data.ryu_date;
     if(!data.ryuMessage&&data.ryu_message)data.ryuMessage=data.ryu_message;
     if(!data.editTheme&&data.edit_theme)data.editTheme=data.edit_theme;
+  }
+  // 履歴を非同期で読み込んで表示
+  if(_authUser&&_authUser.id){
+    loadKanteishiHistory(el);
   }
   if(data&&data.status==='provided'){
     if(data.mode==='ryu'&&data.ryuList&&data.ryuList.length){
@@ -1593,6 +1600,57 @@ async function renderKanteishi(){
       「鑑定を依頼する」ボタンをクリックすることで、<br>上記の注意事項に<strong style="color:#e8d280;">同意したもの</strong>とみなします。
     </div>
     <button class="btn-main" onclick="sendRequest()">鑑 定 を 依 頼 す る</button>`;
+}
+
+
+async function loadKanteishiHistory(parentEl){
+  if(!_authUser||!_authUser.id)return;
+  try{
+    const res=await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/history',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:_authUser.id})
+    });
+    const history=await res.json();
+    if(!Array.isArray(history)||history.length<=1)return;
+    // 最新以外の履歴を表示
+    const past=history.slice(1);
+    const histHtml=`<div class="divhr"></div>
+      <div class="result-lbl">過 去 の 鑑 定 履 歴</div>
+      ${past.map(h=>`
+        <div class="history-item" onclick="loadHistoryDetail('${h.id}',this)">
+          <div class="history-date">${h.ryu_date||h.date||fmtDate(h.requested_at)} ▶</div>
+          <div class="history-detail" style="display:none;"></div>
+        </div>`).join('')}`;
+    const histEl=document.createElement('div');
+    histEl.innerHTML=histHtml;
+    parentEl.appendChild(histEl);
+  }catch(e){console.log('history load error',e);}
+}
+
+async function loadHistoryDetail(id,el){
+  const detailEl=el.querySelector('.history-detail');
+  if(detailEl.style.display==='block'){
+    detailEl.style.display='none';
+    el.querySelector('.history-date').textContent=el.querySelector('.history-date').textContent.replace('▼','▶');
+    return;
+  }
+  el.querySelector('.history-date').textContent=el.querySelector('.history-date').textContent.replace('▶','▼');
+  detailEl.style.display='block';
+  if(detailEl.innerHTML)return;
+  detailEl.innerHTML='<span class="dots"><span></span><span></span><span></span></span>';
+  try{
+    const res=await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/get-by-id',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
+    const data=await res.json();
+    if(data){
+      if(!data.ryuList&&data.ryu_list)data.ryuList=data.ryu_list;
+      if(!data.ryuDate&&data.ryu_date)data.ryuDate=data.ryu_date;
+      if(!data.ryuMessage&&data.ryu_message)data.ryuMessage=data.ryu_message;
+      detailEl.innerHTML=renderRyuKanteishi(data);
+    }
+  }catch(e){detailEl.innerHTML='読み込みエラー';}
 }
 
 function renderRyuKanteishi(data){
@@ -1705,7 +1763,15 @@ function renderRyuKanteishi(data){
 
   return header+p1+p2+message+notes+`
     <div class="divhr"></div>
-    <button class="btn-pdf" onclick="genPDF('ツイてる龍鑑定書')">✦ PDFで保存する</button>`;
+    <button class="btn-pdf" onclick="genPDF('ツイてる龍鑑定書')">✦ PDFで保存する</button>
+    <div style="margin-top:20px;padding:16px;background:rgba(200,168,75,0.05);border:0.5px solid rgba(200,168,75,0.2);">
+      <div style="font-size:13px;color:rgba(230,226,218,0.9);line-height:1.9;margin-bottom:12px;">
+        <strong style="color:#dfc070;">再鑑定をご希望の方へ</strong><br>
+        龍が増えた・色変わりした気がするなど、変化を感じた時はお気軽にご依頼ください。<br>
+        <span style="font-size:12px;color:rgba(215,205,175,0.75);">※ 再鑑定結果が前回と同じ場合もございます。その場合も鑑定料の返金はできかねますのでご了承ください。</span>
+      </div>
+      <button class="btn-main" onclick="sendReKanteishi()">再 鑑 定 を 依 頼 す る</button>
+    </div>`;
 }
 
 async function sendRequest(){
@@ -1731,6 +1797,23 @@ async function sendRequest(){
   localStorage.setItem(requestKey,Date.now().toString());
   // Chatwork通知
   await notifyChatwork('【龍鑑定依頼】\nお名前：'+name+'\n生年月日：'+birth+'\nメール：'+email+'\n依頼日時：'+new Date().toLocaleString('ja-JP'));
+  renderKanteishi();
+}
+
+
+async function sendReKanteishi(){
+  if(!confirm('再鑑定を依頼します。よろしいですか？'))return;
+  const birth=S.birthStr||localDate(S.birth);
+  const name=S.name||'依頼者';
+  const bkForSupabase=birthKey();
+  try{
+    await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/request',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({birth_key:bkForSupabase,name,birth,user_id:_authUser?.id||null,status:'unpaid'})
+    });
+  }catch(e){console.log('再鑑定依頼エラー',e);}
+  await notifyChatwork('【龍鑑定 再鑑定依頼】\nお名前：'+name+'\n生年月日：'+birth+'\n依頼日時：'+new Date().toLocaleString('ja-JP'));
+  alert('再鑑定のご依頼を受け付けました。\nお支払い案内をお送りします。');
   renderKanteishi();
 }
 
