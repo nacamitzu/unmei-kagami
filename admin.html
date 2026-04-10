@@ -345,6 +345,7 @@ function mapRow(r){
     name:r.name||'不明',
     kana:r.kana||'',
     contact:r.contact||'',
+    email:r.email||'',
     theme:r.theme||'',
     requestedAt:r.requested_at||r.created_at||'',
     status:r.status||'unpaid',
@@ -378,7 +379,7 @@ async function renderList(){
       <div>
         <div class="req-name">${r.name}${r.kana?` <span style="font-size:10px;opacity:.6;">${r.kana}</span>`:''}</div>
         <div class="req-sub">${r.birthKey}　${r.theme||'テーマ未記入'}</div>
-        <div class="req-sub">依頼：${fmtDate(r.requestedAt)||'直接追加'}</div>
+        <div class="req-sub">依頼：${fmtDate(r.requestedAt)||'直接追加'}${r.email?' ／ '+r.email:''}</div>
       </div>
       <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
         <span class="badge ${STATUS_CLASS[r.status]||'badge-unpaid'}">${STATUS_LABEL[r.status]||'未入金'}</span>
@@ -396,7 +397,8 @@ function selectRequest(birthKey){
   document.getElementById('detail-panel').style.display='block';
   document.getElementById('detail-info').innerHTML=
     `<span style="color:var(--gold2);font-weight:500;">${r.name}</span>${r.kana?' '+r.kana:''}　${r.birthKey}<br>
-     テーマ：${r.theme||'未記入'}　連絡先：${r.contact||'未記入'}<br>
+     メール：${r.email||'未記入'}　連絡先：${r.contact||'未記入'}<br>
+     テーマ：${r.theme||'未記入'}<br>
      ステータス：<span class="badge ${STATUS_CLASS[r.status]}">${STATUS_LABEL[r.status]}</span>`;
   // 龍データ復元
   ryuRows=[];
@@ -586,7 +588,7 @@ function addRequest(){
   if(!birth){toast('生年月日を入力してください');return;}
   fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/request',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({birth_key:birth,name:name||'未記入',birth,kana,contact,theme,status:'unpaid'})
+    body:JSON.stringify({birth_key:birth,name:name||'未記入',birth,kana,contact,theme,status:'unpaid',email:''})
   }).then(()=>{toast('依頼を追加しました');renderList();})
   .catch(e=>{console.log('Supabase add error',e);toast('追加失敗：'+e.message);});
 }

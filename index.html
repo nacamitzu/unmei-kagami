@@ -1215,6 +1215,11 @@ async function renderKanteishi(){
         <p>10. 本鑑定はエンターテインメントを目的としたものです。鑑定結果を人生における重要な判断（転職・結婚・投資等）の唯一の根拠とすることはお控えください。</p>
       </div>
     </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:#dfc070;letter-spacing:.15em;margin-bottom:6px;">メールアドレス（必須）</div>
+      <input id="ryu-email" type="email" placeholder="example@email.com" style="width:100%;background:rgba(255,255,255,0.08);border:0.5px solid rgba(200,168,75,0.4);padding:10px 14px;font-family:inherit;font-size:14px;color:#ede8e0;box-sizing:border-box;" />
+      <div style="font-size:11px;color:rgba(215,205,175,0.7);margin-top:4px;">鑑定結果のお届けと、お問い合わせ対応に使用します</div>
+    </div>
     <div style="font-size:12px;color:rgba(215,205,175,0.9);line-height:1.9;margin-bottom:14px;text-align:center;padding:10px 8px;background:rgba(200,100,80,0.08);border:0.5px solid rgba(200,100,80,0.3);">
       <span style="font-size:16px;margin-right:6px;">⚠️</span>上記の注意事項を十分にご確認ください。<br>
       「鑑定を依頼する」ボタンをクリックすることで、<br>上記の注意事項に<strong style="color:#e8d280;">同意したもの</strong>とみなします。
@@ -1338,20 +1343,26 @@ function renderRyuKanteishi(data){
 async function sendRequest(){
   const birth=S.birthStr||localDate(S.birth);
   const name=S.name||'依頼者';
+  const emailEl=document.getElementById('ryu-email');
+  const email=emailEl?emailEl.value.trim():'';
+  if(!email||!email.includes('@')){
+    alert('メールアドレスを正しく入力してください');
+    return;
+  }
   const bkForSupabase=birthKey();
   // Supabaseに保存
   try{
     await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/supabase/request',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({birth_key:bkForSupabase,name,birth})
+      body:JSON.stringify({birth_key:bkForSupabase,name,birth,email})
     });
   }catch(e){console.log('Supabase保存失敗',e);}
   // localStorageにも保存（後方互換）
   const requestKey=birthKey+'_request';
   localStorage.setItem(requestKey,Date.now().toString());
   // Chatwork通知
-  await notifyChatwork('【龍鑑定依頼】\n生年月日：'+birth+'\n依頼日時：'+new Date().toLocaleString('ja-JP'));
+  await notifyChatwork('【龍鑑定依頼】\nお名前：'+name+'\n生年月日：'+birth+'\nメール：'+email+'\n依頼日時：'+new Date().toLocaleString('ja-JP'));
   renderKanteishi();
 }
 
