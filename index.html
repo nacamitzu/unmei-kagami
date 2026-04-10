@@ -830,14 +830,35 @@ let _accessToken = null;
 
 // Auth初期化（ページロード時）
 function initAuth(){
-  // パスワードリセットのリダイレクト検出
+  // パスワードリセットのリダイレクト検出（type=recoveryの場合のみ）
   const hash = window.location.hash;
-  if(hash.includes('type=recovery') || hash.includes('access_token')){
+  if(hash.includes('type=recovery')){
     const params = new URLSearchParams(hash.replace('#','?'));
     const token = params.get('access_token');
     if(token){
       _accessToken = token;
+      document.getElementById('auth-panel').style.display='block';
+      document.getElementById('input-area').style.display='none';
       showAuthMode('update-password');
+      return;
+    }
+  }
+  // メール確認後の自動ログイン（type=signup）
+  if(hash.includes('type=signup') || hash.includes('access_token')){
+    const params = new URLSearchParams(hash.replace('#','?'));
+    const token = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if(token){
+      // アクセストークンからユーザー情報を取得して自動ログイン
+      _accessToken = token;
+      const expiresIn = parseInt(params.get('expires_in')||'3600');
+      localStorage.setItem('mk_auth', JSON.stringify({
+        access_token: token,
+        user: {email: ''},
+        expires_at: Math.floor(Date.now()/1000) + expiresIn
+      }));
+      window.location.hash = '';
+      showLoggedIn();
       return;
     }
   }
