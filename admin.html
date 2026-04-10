@@ -378,7 +378,7 @@ async function renderList(){
     <div class="request-item${r.birthKey===currentBirthKey?' active':''}" onclick="selectRequest('${r.birthKey}')">
       <div>
         <div class="req-name">${r.name}${r.kana?` <span style="font-size:10px;opacity:.6;">${r.kana}</span>`:''}</div>
-        <div class="req-sub">${r.birthKey}　${r.theme||'テーマ未記入'}</div>
+        <div class="req-sub">${r.birthKey}</div>
         <div class="req-sub">依頼：${fmtDate(r.requestedAt)||'直接追加'}${r.email?' ／ '+r.email:''}</div>
       </div>
       <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -397,8 +397,7 @@ function selectRequest(birthKey){
   document.getElementById('detail-panel').style.display='block';
   document.getElementById('detail-info').innerHTML=
     `<span style="color:var(--gold2);font-weight:500;">${r.name}</span>${r.kana?' '+r.kana:''}　${r.birthKey}<br>
-     メール：${r.email||'未記入'}　連絡先：${r.contact||'未記入'}<br>
-     テーマ：${r.theme||'未記入'}<br>
+     メール：${r.email||'未記入'}<br>
      ステータス：<span class="badge ${STATUS_CLASS[r.status]}">${STATUS_LABEL[r.status]}</span>`;
   // 龍データ復元
   ryuRows=[];
