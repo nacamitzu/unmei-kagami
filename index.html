@@ -946,7 +946,6 @@ async function showLoggedIn(){
 }
 
 function startReadingFromProfile(profile){
-  // プロフィールデータでSを初期化
   const name = profile.name||'';
   const bv = profile.birth||'';
   if(!bv)return;
@@ -956,7 +955,13 @@ function startReadingFromProfile(profile){
   S.hour=profile.hour||'';
   S.gender=profile.gender||'';
   S.today=new Date();
-  calcAll();
+  const seed=mkSeed(S.birth,S.today);
+  S.kk=drawKK(seed);S.lucky=getLucky(seed);
+  S.shicyu=calcShicyu(S.birth,S.hour);
+  S.kyusei=calcKyusei(S.birth);
+  S.suuhi=calcSuuhi(S.birth);
+  S.seimei=calcSeimei(name);
+  drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
   try{localStorage.setItem('mk_profile',JSON.stringify({name,birth:bv,hour:S.hour,gender:S.gender}));}catch(e){}
   document.getElementById('input-area').style.display='none';
   const mainPanel=document.getElementById('main-panel');
