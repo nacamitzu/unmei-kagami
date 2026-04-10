@@ -239,8 +239,68 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
   <div class="hline"></div>
 </header>
 
+<!-- ログイン -->
+<div id="auth-panel" class="card" style="max-width:400px;margin:0 auto 24px;">
+  <div id="auth-mode-login">
+    <div class="sec-title" style="justify-content:center;margin-bottom:20px;">命 鏡 へ よ う こ そ</div>
+    <div style="font-size:13px;color:rgba(230,226,218,0.8);text-align:center;margin-bottom:20px;line-height:1.8;">
+      メールアドレスとパスワードでログインしてください。<br>初めての方は新規登録からどうぞ。
+    </div>
+    <div style="margin-bottom:14px;"><div class="lbl">メールアドレス</div>
+      <input class="inp" id="auth-email" type="email" placeholder="example@email.com" /></div>
+    <div style="margin-bottom:6px;"><div class="lbl">パスワード</div>
+      <input class="inp" id="auth-password" type="password" placeholder="パスワード" onkeydown="if(event.key==='Enter')doAuthLogin()" /></div>
+    <div style="text-align:right;margin-bottom:16px;">
+      <span style="font-size:12px;color:rgba(200,168,75,0.8);cursor:pointer;" onclick="showAuthMode('reset')">パスワードを忘れた方はこちら</span>
+    </div>
+    <div id="auth-error" style="font-size:12px;color:#e87070;margin-bottom:12px;display:none;"></div>
+    <button class="btn-main" onclick="doAuthLogin()">ロ グ イ ン</button>
+    <div style="text-align:center;margin-top:14px;">
+      <span style="font-size:12px;color:rgba(230,226,218,0.6);">初めての方は</span>
+      <span style="font-size:12px;color:rgba(200,168,75,0.9);cursor:pointer;" onclick="showAuthMode('signup')">新規登録</span>
+    </div>
+  </div>
+  <div id="auth-mode-signup" style="display:none;">
+    <div class="sec-title" style="justify-content:center;margin-bottom:20px;">新 規 登 録</div>
+    <div style="margin-bottom:14px;"><div class="lbl">メールアドレス</div>
+      <input class="inp" id="signup-email" type="email" placeholder="example@email.com" /></div>
+    <div style="margin-bottom:14px;"><div class="lbl">パスワード（8文字以上）</div>
+      <input class="inp" id="signup-password" type="password" placeholder="パスワード" /></div>
+    <div style="margin-bottom:16px;"><div class="lbl">パスワード（確認）</div>
+      <input class="inp" id="signup-password2" type="password" placeholder="パスワード（再入力）" /></div>
+    <div id="signup-error" style="font-size:12px;color:#e87070;margin-bottom:12px;display:none;"></div>
+    <button class="btn-main" onclick="doAuthSignup()">登 録</button>
+    <div style="text-align:center;margin-top:14px;">
+      <span style="font-size:12px;color:rgba(200,168,75,0.9);cursor:pointer;" onclick="showAuthMode('login')">← ログインに戻る</span>
+    </div>
+  </div>
+  <div id="auth-mode-reset" style="display:none;">
+    <div class="sec-title" style="justify-content:center;margin-bottom:20px;">パスワード再設定</div>
+    <div style="font-size:13px;color:rgba(230,226,218,0.8);text-align:center;margin-bottom:20px;line-height:1.8;">
+      登録済みのメールアドレスを入力してください。<br>パスワード再設定のメールをお送りします。
+    </div>
+    <div style="margin-bottom:16px;"><div class="lbl">メールアドレス</div>
+      <input class="inp" id="reset-email" type="email" placeholder="example@email.com" /></div>
+    <div id="reset-msg" style="font-size:12px;color:#90d090;margin-bottom:12px;display:none;"></div>
+    <div id="reset-error" style="font-size:12px;color:#e87070;margin-bottom:12px;display:none;"></div>
+    <button class="btn-main" onclick="doAuthReset()">再 設 定 メ ー ル を 送 る</button>
+    <div style="text-align:center;margin-top:14px;">
+      <span style="font-size:12px;color:rgba(200,168,75,0.9);cursor:pointer;" onclick="showAuthMode('login')">← ログインに戻る</span>
+    </div>
+  </div>
+  <div id="auth-mode-update-password" style="display:none;">
+    <div class="sec-title" style="justify-content:center;margin-bottom:20px;">新しいパスワードを設定</div>
+    <div style="margin-bottom:14px;"><div class="lbl">新しいパスワード（8文字以上）</div>
+      <input class="inp" id="new-password" type="password" placeholder="新しいパスワード" /></div>
+    <div style="margin-bottom:16px;"><div class="lbl">パスワード（確認）</div>
+      <input class="inp" id="new-password2" type="password" placeholder="パスワード（再入力）" /></div>
+    <div id="update-pw-error" style="font-size:12px;color:#e87070;margin-bottom:12px;display:none;"></div>
+    <button class="btn-main" onclick="doUpdatePassword()">パスワードを更新する</button>
+  </div>
+</div>
+
 <!-- 入力 -->
-<div id="input-area" class="card">
+<div id="input-area" class="card" style="display:none;">
   <div class="sec-title">ご本人の情報</div>
   <label class="lbl">お 名 前（姓　名）</label>
   <input class="inp" id="inp-name" type="text" placeholder="例：山田 花子">
@@ -761,6 +821,181 @@ function renderUnmeiIndividual(sc,k,su,se){
     +'</div>'
     +'<div class="divhr"></div>'
     +'<div class="result-lbl">総 合 鑑 定</div>';
+}
+
+
+const WORKER = 'https://unmei-chatwork.mitzuryu-happinessroom.workers.dev';
+let _authUser = null; // ログイン中のユーザー情報
+let _accessToken = null;
+
+// Auth初期化（ページロード時）
+function initAuth(){
+  // パスワードリセットのリダイレクト検出
+  const hash = window.location.hash;
+  if(hash.includes('type=recovery') || hash.includes('access_token')){
+    const params = new URLSearchParams(hash.replace('#','?'));
+    const token = params.get('access_token');
+    if(token){
+      _accessToken = token;
+      showAuthMode('update-password');
+      return;
+    }
+  }
+  // セッション復元
+  const saved = localStorage.getItem('mk_auth');
+  if(saved){
+    try{
+      const data = JSON.parse(saved);
+      if(data.access_token && data.expires_at > Date.now()/1000){
+        _authUser = data.user;
+        _accessToken = data.access_token;
+        showLoggedIn();
+        return;
+      }
+    }catch(e){}
+    localStorage.removeItem('mk_auth');
+  }
+  // 未ログイン
+  document.getElementById('auth-panel').style.display='block';
+  document.getElementById('input-area').style.display='none';
+}
+
+function showAuthMode(mode){
+  ['login','signup','reset','update-password'].forEach(m=>{
+    const el=document.getElementById('auth-mode-'+m);
+    if(el) el.style.display = m===mode?'block':'none';
+  });
+}
+
+function showLoggedIn(){
+  document.getElementById('auth-panel').style.display='none';
+  document.getElementById('input-area').style.display='block';
+  // ヘッダーにログアウトボタンを追加
+  const logoutEl = document.getElementById('logout-btn');
+  if(!logoutEl){
+    const btn = document.createElement('div');
+    btn.id = 'logout-btn';
+    btn.style.cssText = 'font-size:11px;color:rgba(200,168,75,0.7);cursor:pointer;text-align:center;margin-top:4px;letter-spacing:.1em;';
+    btn.textContent = 'ログアウト';
+    btn.onclick = doAuthLogout;
+    document.querySelector('header').appendChild(btn);
+  }
+}
+
+async function doAuthLogin(){
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display='none';
+  if(!email||!password){errEl.textContent='メールアドレスとパスワードを入力してください';errEl.style.display='block';return;}
+  try{
+    const res = await fetch(WORKER+'/auth/login',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if(data.access_token){
+      _authUser = data.user;
+      _accessToken = data.access_token;
+      localStorage.setItem('mk_auth', JSON.stringify({
+        access_token: data.access_token,
+        user: data.user,
+        expires_at: data.expires_at
+      }));
+      showLoggedIn();
+    } else {
+      errEl.textContent = data.error_description||data.msg||'ログインに失敗しました';
+      errEl.style.display='block';
+    }
+  }catch(e){
+    errEl.textContent='通信エラー：'+e.message;
+    errEl.style.display='block';
+  }
+}
+
+async function doAuthSignup(){
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const password2 = document.getElementById('signup-password2').value;
+  const errEl = document.getElementById('signup-error');
+  errEl.style.display='none';
+  if(!email||!password){errEl.textContent='メールアドレスとパスワードを入力してください';errEl.style.display='block';return;}
+  if(password.length<8){errEl.textContent='パスワードは8文字以上にしてください';errEl.style.display='block';return;}
+  if(password!==password2){errEl.textContent='パスワードが一致しません';errEl.style.display='block';return;}
+  try{
+    const res = await fetch(WORKER+'/auth/signup',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if(data.id||data.user){
+      errEl.style.cssText='font-size:12px;color:#90d090;margin-bottom:12px;display:block;';
+      errEl.textContent='確認メールをお送りしました。メールのリンクをクリックして登録を完了してください。';
+    } else {
+      errEl.textContent = data.error_description||data.msg||'登録に失敗しました';
+      errEl.style.display='block';
+    }
+  }catch(e){
+    errEl.textContent='通信エラー：'+e.message;
+    errEl.style.display='block';
+  }
+}
+
+async function doAuthReset(){
+  const email = document.getElementById('reset-email').value.trim();
+  const errEl = document.getElementById('reset-error');
+  const msgEl = document.getElementById('reset-msg');
+  errEl.style.display='none'; msgEl.style.display='none';
+  if(!email){errEl.textContent='メールアドレスを入力してください';errEl.style.display='block';return;}
+  try{
+    const res = await fetch(WORKER+'/auth/reset',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email})
+    });
+    msgEl.textContent='パスワード再設定メールをお送りしました。メールをご確認ください。';
+    msgEl.style.display='block';
+  }catch(e){
+    errEl.textContent='通信エラー：'+e.message;
+    errEl.style.display='block';
+  }
+}
+
+async function doUpdatePassword(){
+  const password = document.getElementById('new-password').value;
+  const password2 = document.getElementById('new-password2').value;
+  const errEl = document.getElementById('update-pw-error');
+  errEl.style.display='none';
+  if(password.length<8){errEl.textContent='パスワードは8文字以上にしてください';errEl.style.display='block';return;}
+  if(password!==password2){errEl.textContent='パスワードが一致しません';errEl.style.display='block';return;}
+  try{
+    const res = await fetch(WORKER+'/auth/update-password',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({access_token:_accessToken, password})
+    });
+    const data = await res.json();
+    if(data.id||data.email){
+      errEl.style.cssText='font-size:12px;color:#90d090;display:block;';
+      errEl.textContent='パスワードを更新しました。ログイン画面からログインしてください。';
+      setTimeout(()=>{showAuthMode('login');window.location.hash='';},2000);
+    } else {
+      errEl.textContent='更新に失敗しました';errEl.style.display='block';
+    }
+  }catch(e){
+    errEl.textContent='通信エラー：'+e.message;errEl.style.display='block';
+  }
+}
+
+function doAuthLogout(){
+  _authUser=null; _accessToken=null;
+  localStorage.removeItem('mk_auth');
+  const btn=document.getElementById('logout-btn');
+  if(btn)btn.remove();
+  document.getElementById('auth-panel').style.display='block';
+  document.getElementById('input-area').style.display='none';
+  showAuthMode('login');
+  // 鑑定画面も隠す
+  const mainPanel=document.getElementById('main-panel');
+  if(mainPanel)mainPanel.style.display='none';
 }
 
 function cleanMd(t){
@@ -1424,6 +1659,8 @@ window.EJ_TEMPLATE     = '';  // EmailJS Template ID
 window.EJ_KEY          = '';  // EmailJS Public Key
 // Chatwork Worker設定
 window.CW_WORKER_URL   = 'https://unmei-chatwork.mitzuryu-happinessroom.workers.dev';  // Cloudflare Worker URL
+
+document.addEventListener('DOMContentLoaded',()=>{ initAuth(); });
 </script>
 </body>
 </html>
