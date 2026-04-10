@@ -308,13 +308,28 @@ function getTextColor(hex){
 // ══════════════════════
 // ログイン
 // ══════════════════════
-function doLogin(){
-  if(document.getElementById('pw-input').value===ADMIN_PASSWORD){
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('admin-body').style.display='block';
-    loadSettings();renderList();
-  } else {
-    document.getElementById('login-err').style.display='block';
+async function doLogin(){
+  const pw=document.getElementById('pw-input').value;
+  if(!pw){document.getElementById('login-err').style.display='block';document.getElementById('login-err').textContent='パスワードを入力してください';return;}
+  document.getElementById('login-err').style.display='block';document.getElementById('login-err').textContent='認証中...';
+  try{
+    const res=await fetch('https://unmei-chatwork.mitzuryu-happinessroom.workers.dev/admin-auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:pw})
+    });
+    const data=await res.json();
+    if(data.ok){
+      isLoggedIn=true;
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('admin-body').style.display='block';
+      renderList();
+    }else{
+      document.getElementById('login-err').style.display='block';document.getElementById('login-err').textContent='パスワードが違います';
+      document.getElementById('pw-input').value='';
+    }
+  }catch(e){
+    document.getElementById('login-err').style.display='block';document.getElementById('login-err').textContent='認証エラー：'+e.message;
   }
 }
 function doLogout(){
