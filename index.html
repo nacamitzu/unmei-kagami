@@ -46,6 +46,8 @@ select.inp option{background:#0e0b07;}
 /* タロット表示 */
 .tarot-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;justify-content:center;}
 .tarot-card{text-align:center;border:0.5px solid rgba(200,195,180,0.7);padding:12px 8px;background:rgba(255,255,255,0.05);min-width:72px;position:relative;}
+.tarot-img{width:100%;max-width:90px;height:auto;display:block;margin:0 auto 4px;border-radius:4px;object-fit:cover;}
+.tarot-img.reversed{transform:rotate(180deg);}
 .tarot-pos{font-size:11px;letter-spacing:.1em;color:rgba(220,215,200,0.9);margin-bottom:5px;}
 .tarot-sym{font-size:20px;color:var(--gold);display:inline-block;}
 .tarot-name{font-size:13px;color:var(--parch2);margin-top:4px;line-height:1.4;}
@@ -198,6 +200,7 @@ select.inp option{background:#0e0b07;}
   /* タロット */
   .tarot-row{break-inside:avoid;}
   .tarot-card{border:0.5pt solid #a07820!important;background:#fdf8ec!important;}
+  .tarot-img{max-width:70px!important;}
   .tarot-pos,.tarot-name{color:#111!important;}
   .tarot-sym{color:#5a3a00!important;}
   .tarot-rev{color:#8a0000!important;}
@@ -529,13 +532,28 @@ const KICHIKU=[
   {label:'大 凶',furi:'だいきょう',en:'GREAT MISFORTUNE',cls:'kk-daikyo',w:5},
 ];
 const TAROT_MAJOR=[
-  {name:'愚者',sym:'☽'},{name:'魔術師',sym:'✦'},{name:'女教皇',sym:'☾'},
-  {name:'女帝',sym:'♀'},{name:'皇帝',sym:'♂'},{name:'教皇',sym:'✙'},
-  {name:'恋人たち',sym:'♡'},{name:'戦車',sym:'◈'},{name:'力',sym:'∞'},
-  {name:'隠者',sym:'☆'},{name:'運命の輪',sym:'⊙'},{name:'正義',sym:'⚖'},
-  {name:'吊された男',sym:'✝'},{name:'死神',sym:'✕'},{name:'節制',sym:'∿'},
-  {name:'悪魔',sym:'♆'},{name:'塔',sym:'⚡'},{name:'星',sym:'★'},
-  {name:'月',sym:'☽'},{name:'太陽',sym:'☀'},{name:'審判',sym:'✺'},{name:'世界',sym:'◎'}
+  {name:'愚者',sym:'☽',img:'00_the_fool.png'},
+  {name:'魔術師',sym:'✦',img:'01_the_magician.png'},
+  {name:'女教皇',sym:'☾',img:'02_the_high_priestess.png'},
+  {name:'女帝',sym:'♀',img:'03_the_empress.png'},
+  {name:'皇帝',sym:'♂',img:'04_the_emperor.png'},
+  {name:'教皇',sym:'✙',img:'05_the_hierophant.png'},
+  {name:'恋人たち',sym:'♡',img:'06_the_lovers.png'},
+  {name:'戦車',sym:'◈',img:'07_the_chariot.png'},
+  {name:'力',sym:'∞',img:'08_strength.png'},
+  {name:'隠者',sym:'☆',img:'09_the_hermit.png'},
+  {name:'運命の輪',sym:'⊙',img:'10_wheel_of_fortune.png'},
+  {name:'正義',sym:'⚖',img:'11_justice.png'},
+  {name:'吊された男',sym:'✝',img:'12_the_hanged_man.png'},
+  {name:'死神',sym:'✕',img:'13_death.png'},
+  {name:'節制',sym:'∿',img:'14_temperance.png'},
+  {name:'悪魔',sym:'♆',img:'15_the_devil.png'},
+  {name:'塔',sym:'⚡',img:'16_the_tower.png'},
+  {name:'星',sym:'★',img:'17_the_star.png'},
+  {name:'月',sym:'☽',img:'18_the_moon.png'},
+  {name:'太陽',sym:'☀',img:'19_the_sun.png'},
+  {name:'審判',sym:'✺',img:'20_judgement.png'},
+  {name:'世界',sym:'◎',img:'21_the_world.png'},
 ];
 
 
@@ -955,14 +973,30 @@ function drawTarotCards(tabKey,count){
   return cards;
 }
 
+const TAROT_IMG_BASE = 'tarot/';  // 画像フォルダのパス（GitHubリポジトリに合わせて変更）
 function renderTarotRow(cards,rowId){
-  document.getElementById(rowId).innerHTML=cards.map(c=>`
-    <div class="tarot-card">
+  document.getElementById(rowId).innerHTML=cards.map(c=>{
+    if(c.img){
+      // 大アルカナ：画像表示
+      return `<div class="tarot-card">
+      <div class="tarot-pos">${c.position}</div>
+      <img class="tarot-img${c.reversed?' reversed':''}" src="${TAROT_IMG_BASE}${c.img}" alt="${c.name}"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'">
+      <div class="tarot-sym" style="display:none">${c.sym}</div>
+      <div class="tarot-name">${c.name}</div>
+      ${c.reversed?'<div class="tarot-rev">逆位置</div>':''}
+    </div>`;
+    } else {
+      // 小アルカナ：シンボル表示
+      return `<div class="tarot-card">
       <div class="tarot-pos">${c.position}</div>
       <div class="tarot-sym" style="${c.reversed?'transform:rotate(180deg);display:inline-block':''}">${c.sym}</div>
       <div class="tarot-name">${c.name}</div>
+      ${c.suit?`<div style="font-size:9px;color:rgba(200,190,160,0.6);margin-top:2px;">${c.suit}</div>`:''}
       ${c.reversed?'<div class="tarot-rev">逆位置</div>':''}
-    </div>`).join('');
+    </div>`;
+    }
+  }).join('');
 }
 
 function tarotStr(cards){
