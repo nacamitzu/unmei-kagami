@@ -1146,7 +1146,7 @@ function startReadingFromProfile(profile){
   const seed=mkSeed(S.birth,S.today);
   S.kk=drawKK(seed);S.lucky=getLucky(seed);
   S.shicyu=calcShicyu(S.birth,S.hour);
-  S.kyusei=calcKyusei(S.birth);
+  S.kyusei=calcKyusei(S.birth,S.shicyu?.tsuShiIdx);
   S.suuhi=calcSuuhi(S.birth);
   S.seimei=calcSeimei(name);
   S.maya=calcMaya(S.birth);
