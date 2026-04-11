@@ -1580,6 +1580,7 @@ async function genKotoshi(){
   const t=S.today,y=yearMode==='next'?t.getFullYear()+1:t.getFullYear();
   const sc=S.shicyu,k=S.kyusei,su=S.suuhi;
   const cards=drawnCards.kotoshi.length?drawnCards.kotoshi:initTarot('kotoshi');
+  renderTarotRow(cards,'kotoshi-tarot-row');
   function buildHtml(){
     return '<div class="individual-block"><div class="indiv-title">命 術</div>'
       +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'（'+sc.ni.kanEl+'）　ライフパス：'+su.lifepath+'</div>'
@@ -1619,6 +1620,7 @@ async function genKongetsu(){
   if(monthMode==='next'){m++;if(m>12){m=1;y++;}}
   const sc=S.shicyu,k=S.kyusei;
   const cards=drawnCards.kongetsu.length?drawnCards.kongetsu:initTarot('kongetsu');
+  renderTarotRow(cards,'kongetsu-tarot-row');
   function buildHtml(){
     return '<div class="individual-block"><div class="indiv-title">命 術</div>'
       +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'（'+sc.ni.kanEl+'）</div>'
@@ -1656,6 +1658,7 @@ async function genKonshu(){
   const t=S.today,target=weekMode==='next'?nextMonday(t):thisMonday(t);
   const sc=S.shicyu,k=S.kyusei,lk=S.lucky,m=target.getMonth()+1;
   const cards=drawnCards.konshu.length?drawnCards.konshu:initTarot('konshu');
+  renderTarotRow(cards,'konshu-tarot-row');
   function buildHtml(){
     const WD3=['日','月','火','水','木','金','土'];
     const kinColorMap=['赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄'];
@@ -1907,10 +1910,11 @@ function showTab(name){
   TABS.forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
   document.querySelectorAll('#tabs .btn-sm').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===name);});
   if(name==='today'){initTarotIfEmpty('today');genTodayIfNeeded();}
-  if(name==='kotoshi'){initTarotIfEmpty('kotoshi');}
-  if(name==='kongetsu'){initTarotIfEmpty('kongetsu');}
-  if(name==='konshu'){initTarotIfEmpty('konshu');}
-  if(name==='kobetsu'){initTarotIfEmpty('kobetsu');}
+  // 年・月・週・個別はボタンを押すまでタロットを引かない
+  if(name==='kotoshi'&&!drawnCards.kotoshi.length){document.getElementById('kotoshi-tarot-row').innerHTML='';}
+  if(name==='kongetsu'&&!drawnCards.kongetsu.length){document.getElementById('kongetsu-tarot-row').innerHTML='';}
+  if(name==='konshu'&&!drawnCards.konshu.length){document.getElementById('konshu-tarot-row').innerHTML='';}
+  if(name==='kobetsu'&&!drawnCards.kobetsu.length){document.getElementById('kobetsu-tarot-row').innerHTML='';}
   if(name==='kanteishi'){renderKanteishi();}
   if(name==='profile'){
     // プロフィール画面に現在の値をセット
