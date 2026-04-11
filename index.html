@@ -335,6 +335,7 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
     <button class="btn-sm" onclick="showTab('konshu')">週</button>
     <button class="btn-sm" onclick="showTab('today')">日</button>
     <button class="btn-sm" onclick="showTab('kobetsu')">個別鑑定</button>
+    <button class="btn-sm" onclick="showTab('maya')">マヤ暦</button>
     <button class="btn-sm" id="tab-btn-kanteishi" onclick="showTab('kanteishi')">龍鑑定</button>
     <button class="btn-sm" id="tab-btn-profile" onclick="showTab('profile')">プロフィール</button>
   </div>
@@ -440,6 +441,62 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
         <button class="btn-pdf" onclick="genPDF('日の鑑定')">✦ PDFで保存する</button>
         <button class="btn-sm" onclick="clearCacheKey(currentDayKey());initTarot('today');genToday()">✦ 引き直す</button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- マヤ暦 -->
+  <div id="tab-maya" class="card unfold" style="display:none">
+    <div class="sec-title">マ ヤ 暦 — KINの導き</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">あなたのKINと今日のKINの共鳴・相性鑑定・開運日を確認します。</div>
+
+    <!-- あなたのKIN情報 -->
+    <div id="maya-your-kin" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,215,120,0.2);border-radius:10px;padding:16px;margin-bottom:18px;text-align:center;">
+      <div style="font-size:10px;letter-spacing:.2em;color:rgba(215,195,130,0.7);margin-bottom:8px;">あなたの KIN</div>
+      <div id="maya-my-kin-num" style="font-size:28px;font-weight:700;color:#f0d080;letter-spacing:.05em;">—</div>
+      <div id="maya-my-kin-sign" style="font-size:15px;color:rgba(230,220,180,0.9);margin-top:4px;">—</div>
+      <div id="maya-my-kin-tone" style="font-size:12px;color:rgba(200,190,160,0.7);margin-top:4px;">—</div>
+    </div>
+
+    <!-- サブタブ -->
+    <div class="subtabs" style="margin-bottom:18px;">
+      <button class="btn-sm active" id="maya-tab-today" onclick="showMayaTab('today')">今日のKIN相性</button>
+      <button class="btn-sm" id="maya-tab-compat" onclick="showMayaTab('compat')">相性鑑定</button>
+      <button class="btn-sm" id="maya-tab-lucky" onclick="showMayaTab('lucky')">開運日</button>
+    </div>
+
+    <!-- 今日のKIN相性 -->
+    <div id="maya-section-today">
+      <div id="maya-today-info" style="background:rgba(255,255,255,0.04);border:1px solid rgba(180,160,100,0.2);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:10px;letter-spacing:.2em;color:rgba(215,195,130,0.7);margin-bottom:6px;text-align:center;">今日の KIN</div>
+        <div id="maya-today-kin-num" style="font-size:22px;font-weight:700;color:#c8e0ff;text-align:center;">—</div>
+        <div id="maya-today-kin-sign" style="font-size:13px;color:rgba(200,220,255,0.85);text-align:center;margin-top:3px;">—</div>
+        <div id="maya-today-kin-tone" style="font-size:11px;color:rgba(180,200,240,0.65);text-align:center;margin-top:3px;">—</div>
+      </div>
+      <div id="maya-today-relation" style="margin-bottom:14px;"></div>
+      <button class="btn-sm" onclick="genMayaTodayReading()">✦ 今日のKIN相性を鑑定する</button>
+      <div id="maya-today-msg" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- 相性鑑定 -->
+    <div id="maya-section-compat" style="display:none">
+      <label class="lbl">相手の生年月日</label>
+      <input class="inp" type="date" id="maya-compat-birth" style="margin-bottom:12px;">
+      <label class="lbl">相手のお名前（任意）</label>
+      <input class="inp" type="text" id="maya-compat-name" placeholder="例：山田太郎" style="margin-bottom:14px;">
+      <div id="maya-compat-info" style="margin-bottom:14px;"></div>
+      <button class="btn-sm" onclick="genMayaCompatReading()">✦ KIN相性を鑑定する</button>
+      <div id="maya-compat-msg" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- 開運日 -->
+    <div id="maya-section-lucky" style="display:none">
+      <div style="font-size:12px;color:rgba(200,190,160,0.8);margin-bottom:14px;line-height:1.7;">
+        あなたのKINが巡ってくる日（260日周期）と、特別な吉日をお知らせします。
+      </div>
+      <div id="maya-lucky-dates" style="margin-bottom:14px;"></div>
+      <button class="btn-sm" onclick="genMayaLuckyReading()">✦ 開運日の導きを鑑定する</button>
+      <div id="maya-lucky-msg" style="margin-top:14px;"></div>
     </div>
   </div>
 
@@ -1615,7 +1672,7 @@ function genPDF(title){
 }
 
 // ── タブ切替 ──
-const TABS=['unmei','kotoshi','kongetsu','konshu','today','kobetsu','kanteishi','profile'];
+const TABS=['unmei','kotoshi','kongetsu','konshu','today','kobetsu','maya','kanteishi','profile'];
 function showTab(name){
   TABS.forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
   document.querySelectorAll('#tabs .btn-sm').forEach((b,i)=>{b.classList.toggle('active',TABS[i]===name);});
@@ -1624,6 +1681,7 @@ function showTab(name){
   if(name==='kongetsu'){initTarotIfEmpty('kongetsu');}
   if(name==='konshu'){initTarotIfEmpty('konshu');}
   if(name==='kobetsu'){initTarotIfEmpty('kobetsu');}
+  if(name==='maya'){initMayaTab();}
   if(name==='kanteishi'){renderKanteishi();}
   if(name==='profile'){
     // プロフィール画面に現在の値をセット
@@ -1633,6 +1691,230 @@ function showTab(name){
     document.getElementById('profile-gender').value=S.gender||'';
     document.getElementById('profile-msg').style.display='none';
   }
+}
+
+
+// ── マヤ暦タブ ──
+let mayaTabMode = 'today';
+
+function getMayaRelation(kin1, kin2) {
+  const diff = ((kin2 - kin1) % 260 + 260) % 260;
+  if (diff === 0)   return {label:'同じKIN（完全共鳴）', score:5, desc:'全く同じ魂の波動を持つ、鏡のような存在。'};
+  if (diff === 130) return {label:'反KIN（対極の鏡）', score:4, desc:'正反対の極にあり、互いを映し合う特別な関係。'};
+  const sign1 = (kin1-1)%20, sign2 = (kin2-1)%20;
+  const tone1 = (kin1-1)%13+1, tone2 = (kin2-1)%13+1;
+  if (sign1 === sign2) return {label:'同じ紋章（魂の同志）', score:4, desc:'同じ太陽の紋章を持つ、使命を共にする仲間。'};
+  if (tone1 === tone2) return {label:'同じ音（共鳴する波動）', score:3, desc:'同じリズムで動く、テンポが合う関係。'};
+  // 色の相性
+  const colors = ['赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄'];
+  const c1 = colors[sign1], c2 = colors[sign2];
+  const colorPairs = {'赤':'白','白':'赤','青':'黄','黄':'青'};
+  if (colorPairs[c1] === c2) return {label:'補色の関係（陰陽の調和）', score:3, desc:'補い合う色の組み合わせ。互いの弱点を補完し合います。'};
+  if (c1 === c2) return {label:'同色の仲間（同じ部族）', score:3, desc:'同じ色の部族に属す、親しみやすい関係。'};
+  // 波スペルの一致
+  const ws1 = Math.floor((kin1-1)/13), ws2 = Math.floor((kin2-1)/13);
+  if (ws1 === ws2) return {label:'同じウェイブスペル（共鳴の旅仲間）', score:3, desc:'同じ13日間の旅を共にする、縁深い関係。'};
+  return {label:'異なる道の出会い', score:2, desc:'それぞれ異なる使命を持ちながら、出会いには必然の意味があります。'};
+}
+
+// スコアを星で表示
+function scoreStars(score) {
+  return '★'.repeat(score) + '☆'.repeat(5-score);
+}
+
+// マヤ暦サブタブ切り替え
+function showMayaTab(name) {
+  ['today','compat','lucky'].forEach(t => {
+    document.getElementById('maya-section-'+t).style.display = t===name ? 'block' : 'none';
+    document.getElementById('maya-tab-'+t).classList.toggle('active', t===name);
+  });
+  if (name === 'lucky') renderMayaLuckyDates();
+  if (name === 'today') renderMayaTodayKin();
+}
+
+// マヤ暦タブ初期化
+function initMayaTab() {
+  if (!S.maya) return;
+  // あなたのKIN表示
+  document.getElementById('maya-my-kin-num').textContent = 'KIN ' + S.maya.kin;
+  document.getElementById('maya-my-kin-sign').textContent = S.maya.sign;
+  document.getElementById('maya-my-kin-tone').textContent = '音' + S.maya.tone + '・' + MAYA_TONE_NAMES[S.maya.tone] + '　WS：' + S.maya.ws;
+  renderMayaTodayKin();
+}
+
+// 今日のKIN表示
+function renderMayaTodayKin() {
+  if (!S.maya || !S.today) return;
+  const todayMaya = calcMaya(S.today);
+  document.getElementById('maya-today-kin-num').textContent = 'KIN ' + todayMaya.kin;
+  document.getElementById('maya-today-kin-sign').textContent = todayMaya.sign;
+  document.getElementById('maya-today-kin-tone').textContent = '音' + todayMaya.tone + '・' + MAYA_TONE_NAMES[todayMaya.tone];
+  const rel = getMayaRelation(S.maya.kin, todayMaya.kin);
+  document.getElementById('maya-today-relation').innerHTML =
+    '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,120,0.15);border-radius:8px;padding:12px;">' +
+    '<div style="font-size:11px;color:rgba(215,195,130,0.8);margin-bottom:4px;">今日との共鳴</div>' +
+    '<div style="font-size:14px;color:#f0d080;font-weight:600;margin-bottom:4px;">' + rel.label + '</div>' +
+    '<div style="font-size:13px;color:rgba(255,200,100,0.8);margin-bottom:6px;">' + scoreStars(rel.score) + '</div>' +
+    '<div style="font-size:12px;color:rgba(210,205,185,0.8);">' + rel.desc + '</div>' +
+    '</div>';
+}
+
+// 今日のKIN相性 AI鑑定
+async function genMayaTodayReading() {
+  if (!S.maya) return;
+  const todayMaya = calcMaya(S.today);
+  const rel = getMayaRelation(S.maya.kin, todayMaya.kin);
+  const el = document.getElementById('maya-today-msg');
+  el.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
+  const prompt = 'あなたはマヤ暦ドリームスペルの鑑定師です。以下のデータをもとに、今日という日の天啓を語りかけてください。\n\n'
+    + '【あなたのKIN】KIN' + S.maya.kin + '「' + S.maya.sign + '」音' + S.maya.tone + '（' + MAYA_TONE_NAMES[S.maya.tone] + '）WS：' + S.maya.ws + '\n'
+    + '【今日のKIN】KIN' + todayMaya.kin + '「' + todayMaya.sign + '」音' + todayMaya.tone + '（' + MAYA_TONE_NAMES[todayMaya.tone] + '）\n'
+    + '【両者の関係】' + rel.label + '：' + rel.desc + '\n\n'
+    + '以下の形式で書いてください（占術解説は不要、直接語りかける形式で）：\n\n'
+    + '今日の天啓：（30字以内の一言）\n解説：（200字以上、今日のエネルギーとあなたへの働きかけを天啓として）\n行動指針：（今日意識すべき具体的な行動を2〜3つ）\n一言：（今日を象徴する短い言葉）';
+  try {
+    const text = await callAPI(prompt, 500);
+    renderMayaReading(text, 'maya-today-msg');
+  } catch(e) { showError('maya-today-msg', e.message||'生成に失敗しました'); }
+}
+
+// 相性鑑定 AI鑑定
+async function genMayaCompatReading() {
+  if (!S.maya) return;
+  const birthStr = document.getElementById('maya-compat-birth').value;
+  const partnerName = document.getElementById('maya-compat-name').value || '相手の方';
+  if (!birthStr) { document.getElementById('maya-compat-msg').innerHTML = '<div style="color:#e07070;">生年月日を入力してください</div>'; return; }
+  const partnerBirth = new Date(birthStr);
+  const partnerMaya = calcMaya(partnerBirth);
+  const rel = getMayaRelation(S.maya.kin, partnerMaya.kin);
+  // 相手情報表示
+  document.getElementById('maya-compat-info').innerHTML =
+    '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(180,160,220,0.2);border-radius:10px;padding:14px;">' +
+    '<div style="font-size:10px;letter-spacing:.2em;color:rgba(200,180,240,0.7);margin-bottom:6px;text-align:center;">' + partnerName + ' の KIN</div>' +
+    '<div style="font-size:20px;font-weight:700;color:#d0c0ff;text-align:center;">KIN ' + partnerMaya.kin + '</div>' +
+    '<div style="font-size:13px;color:rgba(210,200,255,0.85);text-align:center;margin-top:3px;">' + partnerMaya.sign + '　音' + partnerMaya.tone + '・' + MAYA_TONE_NAMES[partnerMaya.tone] + '</div>' +
+    '<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(180,160,220,0.15);">' +
+    '<div style="font-size:12px;color:#f0d080;font-weight:600;">' + rel.label + '</div>' +
+    '<div style="font-size:12px;color:rgba(255,200,100,0.8);">' + scoreStars(rel.score) + '</div>' +
+    '<div style="font-size:11px;color:rgba(210,205,185,0.75);margin-top:4px;">' + rel.desc + '</div>' +
+    '</div></div>';
+  const el = document.getElementById('maya-compat-msg');
+  el.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
+  const prompt = 'あなたはマヤ暦ドリームスペルの鑑定師です。以下の2人のKINをもとに、魂の相性を深く読み解いてください。\n\n'
+    + '【あなた】KIN' + S.maya.kin + '「' + S.maya.sign + '」音' + S.maya.tone + '（' + MAYA_TONE_NAMES[S.maya.tone] + '）WS：' + S.maya.ws + '\n'
+    + '【' + partnerName + '】KIN' + partnerMaya.kin + '「' + partnerMaya.sign + '」音' + partnerMaya.tone + '（' + MAYA_TONE_NAMES[partnerMaya.tone] + '）WS：' + partnerMaya.ws + '\n'
+    + '【関係性】' + rel.label + '\n\n'
+    + '以下の形式で書いてください（占術解説は不要、直接語りかける形式で）：\n\n'
+    + '魂の縁：（30字以内、2人の縁の本質）\n解説：（250字以上、2人が出会った宇宙的な意味と、互いにもたらし合うものを語りかける）\nともに歩む道：（200字以上、2人が力を合わせることで開ける可能性）\n一言：（この縁を象徴する言葉）';
+  try {
+    const text = await callAPI(prompt, 600);
+    renderMayaReading(text, 'maya-compat-msg');
+  } catch(e) { showError('maya-compat-msg', e.message||'生成に失敗しました'); }
+}
+
+// 開運日一覧を表示
+function renderMayaLuckyDates() {
+  if (!S.maya || !S.today) return;
+  const today = S.today;
+  const myKin = S.maya.kin;
+  const dates = [];
+  // 今日から1年間で自分のKINが巡る日を検索
+  for (let i = 0; i <= 520; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const m = calcMaya(d);
+    if (m.kin === myKin) dates.push({date: d, type: '✦ あなたのKIN日', color: '#f0d080'});
+    // WS開始日（音1）
+    if (m.tone === 1 && m.sign === S.maya.ws) dates.push({date: d, type: '◈ WS開始日', color: '#a0e0ff'});
+    // 同じ紋章日
+    if (m.sign === S.maya.sign && m.kin !== myKin) dates.push({date: d, type: '◇ 同紋章日', color: '#c0ffc0'});
+    if (dates.length >= 12) break;
+  }
+  dates.sort((a,b) => a.date - b.date);
+  const WD2 = ['日','月','火','水','木','金','土'];
+  const html = dates.slice(0,10).map(d => {
+    const dd = d.date;
+    const maya = calcMaya(dd);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+      '<div style="font-size:11px;color:rgba(200,195,175,0.7);min-width:110px;">' +
+        dd.getFullYear()+'年'+(dd.getMonth()+1)+'月'+dd.getDate()+'日（'+WD2[dd.getDay()]+'）' +
+      '</div>' +
+      '<div style="flex:1;">' +
+        '<span style="font-size:11px;color:'+d.color+';font-weight:600;">'+d.type+'</span>' +
+        '<span style="font-size:10px;color:rgba(190,185,165,0.6);margin-left:6px;">KIN'+maya.kin+'　'+maya.sign+'</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('maya-lucky-dates').innerHTML =
+    '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,215,120,0.12);border-radius:10px;padding:14px;">' +
+    '<div style="font-size:10px;letter-spacing:.15em;color:rgba(215,195,130,0.6);margin-bottom:10px;">今後の開運日（最大10件）</div>' +
+    html + '</div>';
+}
+
+// 開運日 AI鑑定
+async function genMayaLuckyReading() {
+  if (!S.maya || !S.today) return;
+  const nextKinDate = (() => {
+    for (let i = 1; i <= 260; i++) {
+      const d = new Date(S.today);
+      d.setDate(d.getDate() + i);
+      if (calcMaya(d).kin === S.maya.kin) return d;
+    }
+    return null;
+  })();
+  const WD2 = ['日','月','火','水','木','金','土'];
+  const nextStr = nextKinDate ?
+    nextKinDate.getFullYear()+'年'+(nextKinDate.getMonth()+1)+'月'+nextKinDate.getDate()+'日（'+WD2[nextKinDate.getDay()]+'）' : '不明';
+  const el = document.getElementById('maya-lucky-msg');
+  el.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
+  const prompt = 'あなたはマヤ暦ドリームスペルの鑑定師です。以下のデータをもとに、開運日の活かし方を語りかけてください。\n\n'
+    + '【あなたのKIN】KIN' + S.maya.kin + '「' + S.maya.sign + '」音' + S.maya.tone + '（' + MAYA_TONE_NAMES[S.maya.tone] + '）WS：' + S.maya.ws + '\n'
+    + '【次のKIN日】' + nextStr + '（260日周期で魂が完全に共鳴する日）\n'
+    + '【紋章の意味】' + (MAYA_SIGN_DESC[S.maya.sign]||'') + '\n'
+    + '【音の意味】' + (MAYA_TONE_DESC[S.maya.tone]||'') + '\n\n'
+    + '以下の形式で書いてください：\n\n'
+    + 'KIN日の天啓：（30字以内）\n解説：（250字以上、次のKIN日に向けて今から何を準備し、どう過ごすべきかを天啓として）\nKIN日にすべきこと：（具体的な行動を3つ）\n260日の旅：（200字以上、260日サイクルの中でのあなたの使命と流れ）\n一言：（この周期を象徴する言葉）';
+  try {
+    const text = await callAPI(prompt, 600);
+    renderMayaReading(text, 'maya-lucky-msg');
+  } catch(e) { showError('maya-lucky-msg', e.message||'生成に失敗しました'); }
+}
+
+// マヤ暦鑑定テキスト共通レンダリング
+function renderMayaReading(text, elId) {
+  text = cleanMd(text);
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  let html = '<div class="kotoba-items">';
+  let buffer = null;
+  const flush = () => {
+    if (!buffer) return;
+    html += '<div class="kotoba-item">';
+    html += '<div class="kotoba-item-label">' + buffer.label + '</div>';
+    html += '<div class="kotoba-item-gen">' + buffer.gen + '</div>';
+    if (buffer.kai) html += '<div class="kotoba-kai-label">解 説</div><div class="kotoba-item-kai">' + buffer.kai + '</div>';
+    html += '</div>';
+    buffer = null;
+  };
+  let ichigon = '';
+  for (const line of lines) {
+    const colonIdx = line.indexOf('：');
+    if (colonIdx > 0 && colonIdx < 12) {
+      const key = line.slice(0, colonIdx);
+      const val = line.slice(colonIdx+1).trim();
+      if (key === '一言') { ichigon = val; continue; }
+      if (key === '解説') { if (buffer) buffer.kai = val; continue; }
+      flush();
+      buffer = {label: key, gen: val, kai: ''};
+    } else if (buffer) {
+      buffer.kai = (buffer.kai ? buffer.kai + '\n' : '') + line;
+    }
+  }
+  flush();
+  html += '</div>';
+  if (ichigon) html += '<div class="ichigon-box"><div class="ichigon-lbl">一 言</div><div class="ichigon-text">' + ichigon + '</div></div>';
+  el.innerHTML = html || '<div class="result-text">' + text.replace(/\n/g,'<br>') + '</div>';
 }
 
 // ── 開始・リセット ──
