@@ -342,7 +342,7 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
   <!-- 天命 -->
   <div id="tab-unmei" class="card unfold">
     <div class="sec-title">天 命 — 運命・使命・宿命</div>
-    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">四柱推命・九星気学・数秘術・姓名判断を複合し、あなたの変わらない天命を鑑定します。</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">四柱推命・九星気学・数秘術・姓名判断・マヤ暦（KIN）の5術を複合し、あなたの変わらない天命を鑑定します。生年月日から導かれる魂の設計図を読み解きます。</div>
     <div id="unmei-msg"><button class="btn-sm" onclick="genUnmei()">✦ 天命を鑑定する</button></div>
     <div class="cache-note" id="unmei-cache-note"></div>
     <div class="divhr"></div>
@@ -358,7 +358,7 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
       <button class="btn-sm" id="yr-next" onclick="setYear('next')">来 年</button>
     </div>
     <div class="sec-title" id="kotoshi-title">今 年 の 指 針</div>
-    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">命術・タロット5枚を統合し、この一年のあなたへの指針を鑑定します。</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">四柱推命・九星気学・数秘術とタロット5枚を統合し、この一年の流れと指針を鑑定します。年・月・日・時の干支の巡りとカードが示す今年のテーマを読み解きます。</div>
     <div id="kotoshi-locked" style="display:none"></div>
     <div id="kotoshi-content">
       <div class="tarot-note">✦ タロット5枚を自動で引いて命術と統合します</div>
@@ -380,7 +380,7 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
       <button class="btn-sm" id="mo-next" onclick="setMonth('next')">来 月</button>
     </div>
     <div class="sec-title" id="kongetsu-title">今 月 の 流 れ</div>
-    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">命術・タロット3枚（テーマ・流れ・結末）を統合し、今月のあなたへの鑑定です。</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">四柱推命・九星気学とタロット3枚（テーマ・流れ・結末）を統合し、今月の気の流れと行動指針を鑑定します。</div>
     <div id="kongetsu-locked" style="display:none"></div>
     <div id="kongetsu-content">
       <div class="tarot-note">✦ タロット3枚を自動で引いて命術と統合します</div>
@@ -402,7 +402,7 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
       <button class="btn-sm" id="wk-next" onclick="setWeek('next')">来 週</button>
     </div>
     <div class="sec-title" id="konshu-title">今 週 の 気 流</div>
-    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">命術・タロット3枚（過去・現在・未来）を統合し、今週の流れを鑑定します。</div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">四柱推命・九星気学・マヤ暦（KIN）とタロット3枚を統合し、今週の流れを鑑定します。月曜〜日曜の7日分をKINのエネルギーで読み解き、日別の行動提案をお届けします。</div>
     <div id="konshu-locked" style="display:none"></div>
     <div id="konshu-content">
       <div class="tarot-note">✦ タロット3枚を自動で引いて命術と統合します</div>
@@ -429,8 +429,9 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
     <div id="today-content">
       <div id="today-kichiku"></div>
       <div class="grid2" id="today-grid"></div>
+      <div id="today-kin-box" style="margin:10px 0;"></div>
       <div class="tarot-divider"></div>
-      <div class="tarot-note">✦ タロット1枚（今日の主題）を自動で引いて統合します</div>
+      <div class="tarot-note">✦ タロット1枚（今日の主題）＋マヤ暦KINを統合します</div>
       <div class="tarot-row" id="today-tarot-row"></div>
       <div class="divhr"></div>
       <div class="result-lbl">今 日 の 言 葉</div>
@@ -447,7 +448,7 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
   <!-- 個別鑑定 -->
   <div id="tab-kobetsu" class="card unfold" style="display:none">
     <div class="sec-title">個 別 鑑 定</div>
-    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">特定のテーマについて、命術＋タロット3枚で深く鑑定します。<br><span style="color:rgba(200,195,180,0.7);">※入力内容はAIに送信されますが、保存はされません。</span></div>
+    <div style="font-size:12px;color:rgba(230,226,218,0.95);margin-bottom:16px;line-height:1.8;">特定のテーマについて、四柱推命・九星気学・数秘術・マヤ暦（KIN）とタロット3枚を統合して深く鑑定します。「恋愛・縁」「転機・決断」はマヤ暦の今日のKINエネルギーを特に重視します。<br><span style="color:rgba(200,195,180,0.7);">※入力内容はAIに送信されますが、保存はされません。</span></div>
     <label class="lbl">鑑定テーマ</label>
     <select class="inp" id="kobetsu-theme">
       <option value="恋愛・縁">恋愛・縁</option>
@@ -460,7 +461,8 @@ footer{text-align:center;margin-top:32px;font-size:12px;letter-spacing:.2em;colo
     </select>
     <label class="lbl">具体的な状況・悩み（任意）</label>
     <textarea class="inp" id="kobetsu-q" rows="3" placeholder="例：転職を考えているのですが、今が時機かどうか迷っています" style="resize:vertical;margin-bottom:12px;"></textarea>
-    <div class="tarot-note" style="margin-bottom:10px;">✦ タロット3枚を自動で引いて命術と統合します</div>
+    <div class="tarot-note" style="margin-bottom:10px;">✦ タロット3枚＋マヤ暦KINを命術と統合します</div>
+    <div id="kobetsu-kin-box" style="margin-bottom:12px;"></div>
     <div class="tarot-row" id="kobetsu-tarot-row"></div>
     <button class="btn-sm" onclick="clearKobetsuTarot();genKobetsu()" style="margin-bottom:8px;">✦ 個別鑑定を行う</button>
     <div class="divhr"></div>
@@ -719,6 +721,42 @@ function calcMaya(birth){
   const signColor = colors[(kin-1)%20];
   
   return {kin, sign, tone, ws, signColor};
+}
+
+
+// ── 今日のKINボックス描画 ──
+function renderKinBox(elId, targetDate, myMaya) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const todayM = calcMaya(targetDate);
+  const kinColorMap = ['赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄'];
+  const todayColor = kinColorMap[(todayM.kin-1)%20];
+  const colorStyle = {赤:'#ffb0a0',白:'#c8c8ff',青:'#a0c8ff',黄:'#ffe080'};
+  const colorMean = {赤:'始動・開始',白:'浄化・内省',青:'変容・行動',黄:'熟成・収穫'};
+  const cs = colorStyle[todayColor] || '#ddd';
+  // KIN関係性
+  let relationLabel = '';
+  if (myMaya && myMaya.kin > 0) {
+    const diff = ((todayM.kin - myMaya.kin + 260) % 260);
+    if (diff === 0) relationLabel = '✦ あなた自身のKIN日';
+    else if (diff === 130) relationLabel = '✦ 反KIN（大きな転換点）';
+    else if ((todayM.kin-1)%20 === (myMaya.kin-1)%20) relationLabel = '✦ 同紋章の日（魂の同志）';
+    else if (todayM.tone === myMaya.tone) relationLabel = '✦ 同音の日（共鳴する波動）';
+    else relationLabel = '';
+  }
+  el.innerHTML =
+    '<div style="display:flex;align-items:stretch;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;">'
+    + '<div style="border-left:3px solid '+cs+';padding-left:10px;flex:1;">'
+    +   '<div style="font-size:9px;letter-spacing:.18em;color:rgba(215,195,130,0.65);margin-bottom:4px;">今日のKIN</div>'
+    +   '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">'
+    +     '<span style="font-size:18px;font-weight:700;color:'+cs+';">KIN'+todayM.kin+'</span>'
+    +     '<span style="font-size:13px;color:rgba(230,220,190,0.9);">「'+todayM.sign+'」</span>'
+    +     '<span style="font-size:11px;color:rgba(200,195,175,0.7);">音'+todayM.tone+'・'+MAYA_TONE_NAMES[todayM.tone]+'</span>'
+    +   '</div>'
+    +   '<div style="font-size:11px;color:'+cs+';margin-top:3px;font-weight:600;">'+todayColor+'のエネルギー ／ '+( colorMean[todayColor]||'')+'</div>'
+    +   (myMaya && myMaya.kin>0 ? '<div style="font-size:10px;color:rgba(215,210,185,0.6);margin-top:2px;">あなた：KIN'+myMaya.kin+'「'+myMaya.sign+'」'+(relationLabel?'　<span style="color:#f0d080;">'+relationLabel+'</span>':'')+'</div>' : '')
+    + '</div>'
+    + '</div>';
 }
 
 // 姓名判断用画数テーブル
@@ -1550,6 +1588,7 @@ async function genToday(){
   document.getElementById('today-msg').innerHTML=tarotIndiv+'<div class="divhr"></div><div class="result-lbl">今 日 の 言 葉</div><div id="today-kotoba"><span class="dots"><span></span><span></span><span></span></span></div>';
   // 今日のKINを計算
   const todayMaya = calcMaya(target);
+  renderKinBox('today-kin-box', target, S.maya);
   const todayKinColors = ['赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄'];
   const todayKinColor = todayKinColors[(todayMaya.kin-1)%20];
   const kinColorMeans = {赤:'始動・開始のエネルギー',白:'浄化・内省のエネルギー',青:'変容・行動のエネルギー',黄:'熟成・収穫のエネルギー'};
@@ -1650,6 +1689,7 @@ async function genKobetsu(){
   document.getElementById('kobetsu-msg').innerHTML=indivHtml+'<div id="kobetsu-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
   // 今日のKINを計算
   const kobetsuTodayMaya = calcMaya(S.today);
+  renderKinBox('kobetsu-kin-box', S.today, S.maya);
   const kobetsuKinColors = ['赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄'];
   const kobetsuColor = kobetsuKinColors[(kobetsuTodayMaya.kin-1)%20];
   const kobetsuColorMeans = {赤:'始動・開始',白:'浄化・内省',青:'変容・行動',黄:'熟成・収穫'};
