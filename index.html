@@ -544,7 +544,7 @@ const TAROT_SPREADS={
   kobetsu:[{pos:'現状'},{pos:'障害'},{pos:'指針'}],
 };
 
-let S={name:'',birth:null,hour:'',gender:'',shicyu:null,kyusei:null,suuhi:null,seimei:null,today:null,kk:null,lucky:null};
+let S={name:'',birth:null,hour:'',gender:'',shicyu:null,kyusei:null,suuhi:null,seimei:null,maya:null,today:null,kk:null,lucky:null};
 let drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
 let yearMode='now',monthMode='now',weekMode='now',dayMode='now';
 
@@ -560,35 +560,214 @@ function daysDiff(a,b){return Math.floor((b-a)/86400000);}
 function fmtDate(d){return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;}
 
 function calcShicyu(birth,hourStr){
-  const y=birth.getFullYear(),m=birth.getMonth()+1;
+  const y=birth.getFullYear(),m=birth.getMonth()+1,d=birth.getDate();
+  // 年柱：甲子年=1984年基準
   const nenKan=((y-4)%10+10)%10,nenShi=((y-4)%12+12)%12;
+  // 日柱：1900年1月1日=甲戌日（天干0=甲,地支10=戌）
   const base=new Date(1900,0,1);
   const diffDays=Math.floor((birth-base)/86400000);
-  const niKan=((diffDays+6)%10+10)%10,niShi=((diffDays+4)%12+12)%12;
-  const monthBase=(y-1900)*12+(m-1);
-  const tsuKan=((monthBase+2)%10+10)%10,tsuShi=(m+1)%12;
+  const niKan=(diffDays%10+10)%10,niShi=((diffDays+10)%12+12)%12;
+  // 月柱：月別節入り日概算テーブル
+  // 小寒(1/6),立春(2/4),啓蟄(3/6),清明(4/5),立夏(5/6),芒種(6/6)
+  // 小暑(7/7),立秋(8/7),白露(9/8),寒露(10/8),立冬(11/7),大雪(12/7)
+  const SETSU_DAYS=[6,4,6,5,6,6,7,7,8,8,7,7];
+  const setsuDay=SETSU_DAYS[m-1];
+  let smonth=d<setsuDay?m-2:m-1;
+  if(smonth<=0)smonth+=12;
+  const tsuShiIdx=[2,3,4,5,6,7,8,9,10,11,0,1][smonth-1];
+  const monthBaseKan=[2,4,6,8,0][nenKan%5];
+  const tsuKan=(monthBaseKan+(tsuShiIdx-2+12)%12)%10;
+  // 時柱
   let ji=null;
-  if(hourStr){const h=parseInt(hourStr.split(':')[0]);const jiShi=Math.floor((h+1)/2)%12;const jiKan=(niKan%5*2+jiShi)%10;ji={kan:KAN10[jiKan],shi:SHI12[jiShi],kanEl:KAN_EL[jiKan],shiEl:SHI_EL[jiShi]};}
-  return{nen:{kan:KAN10[nenKan],shi:SHI12[nenShi],kanEl:KAN_EL[nenKan],shiEl:SHI_EL[nenShi]},tsu:{kan:KAN10[tsuKan],shi:SHI12[tsuShi],kanEl:KAN_EL[tsuKan],shiEl:SHI_EL[tsuShi]},ni:{kan:KAN10[niKan],shi:SHI12[niShi],kanEl:KAN_EL[niKan],shiEl:SHI_EL[niShi]},ji};
+  if(hourStr){
+    const h=parseInt(hourStr.split(':')[0]);
+    const jiShi=Math.floor((h+1)/2)%12;
+    // 時干：日干に基づく子時起算
+    // 甲己日→甲(0)子,乙庚日→丙(2)子,丙辛日→戊(4)子,丁壬日→庚(6)子,戊癸日→壬(8)子
+    const timeBaseKan=[0,2,4,6,8][niKan%5];
+    const jiKan=(timeBaseKan+jiShi)%10;
+    ji={kan:KAN10[jiKan],shi:SHI12[jiShi],kanEl:KAN_EL[jiKan],shiEl:SHI_EL[jiShi]};
+  }
+  return{nen:{kan:KAN10[nenKan],shi:SHI12[nenShi],kanEl:KAN_EL[nenKan],shiEl:SHI_EL[nenShi]},tsu:{kan:KAN10[tsuKan],shi:SHI12[tsuShiIdx],kanEl:KAN_EL[tsuKan],shiEl:SHI_EL[tsuShiIdx]},ni:{kan:KAN10[niKan],shi:SHI12[niShi],kanEl:KAN_EL[niKan],shiEl:SHI_EL[niShi]},ji,tsuShiIdx};
 }
-function calcKyusei(birth){
-  const y=birth.getFullYear(),m=birth.getMonth()+1;
-  const ay=m<=1?y-1:y;
-  const honmei=((11-((ay-1984)%9+9)%9-1)%9)+1;
+function calcKyusei(birth,tsuShiIdx){
+  const y=birth.getFullYear(),m=birth.getMonth()+1,d=birth.getDate();
+  // 本命星：立春（2月4日）前は前年扱い
+  let ay=y;
+  if(m===1||(m===2&&d<4))ay=y-1;
+  let s=ay;
+  while(s>=10){s=String(s).split('').reduce((a,c)=>a+parseInt(c),0);}
+  const honmei=((11-s)%9)||9;
+
+  // 月命星：月命星テーブル（本命星×節月index）
+  // 節月index：0=寅,1=卯,...,7=酉,...,11=丑
+  const MOON_TABLE={
+    1:[8,7,6,5,4,3,2,1,9,8,7,6],
+    2:[2,3,4,5,6,7,8,9,1,2,3,4],
+    3:[5,4,3,2,1,9,8,7,6,5,4,3],
+    4:[2,3,4,5,6,7,8,9,1,2,3,4],
+    5:[8,7,6,5,4,3,2,1,9,8,7,6],
+    6:[2,3,4,5,6,7,8,9,1,2,3,4],
+    7:[5,4,3,2,1,9,8,7,6,5,4,3],
+    8:[2,3,4,5,6,7,8,9,1,2,3,4],
+    9:[8,7,6,5,4,3,2,1,9,8,7,6],
+  };
+  // 月支index(0=子,...,2=寅,...,9=酉)→節月index(0=寅起算)
+  // 寅=2→0, 卯=3→1, ..., 丑=1→11
+  const shiToSmonth=[11,10,0,1,2,3,4,5,6,7,8,9]; // 子=11,丑=10,寅=0,...
+  const smonthIdx=tsuShiIdx!==undefined?shiToSmonth[tsuShiIdx]:0;
+  const tsuki=MOON_TABLE[honmei][smonthIdx];
+
+  // 傾斜宮テーブル（本命星×月命星）
+  const KEISHA=[
+    ['坎','坤','震','巽','中','乾','兌','艮','離'],
+    ['離','坎','坤','震','巽','中','乾','兌','艮'],
+    ['艮','離','坎','坤','震','巽','中','乾','兌'],
+    ['兌','艮','離','坎','坤','震','巽','中','乾'],
+    ['乾','兌','艮','離','坎','坤','震','巽','中'],
+    ['中','乾','兌','艮','離','坎','坤','震','巽'],
+    ['巽','中','乾','兌','艮','離','坎','坤','震'],
+    ['震','巽','中','乾','兌','艮','離','坎','坤'],
+    ['坤','震','巽','中','乾','兌','艮','離','坎'],
+  ];
+  const keisha=KEISHA[honmei-1][tsuki-1];
+
+  // 今日の九星
   const diff=Math.floor((new Date()-new Date(1984,0,1))/86400000);
   const todayK=((5-diff%9+9)%9)||9;
-  return{honmei,todayK};
+  return{honmei,tsuki,keisha,todayK};
 }
 function calcSuuhi(birth){
   const y=birth.getFullYear(),m=birth.getMonth()+1,d=birth.getDate();
   return{lifepath:reduce(y+m+d),birthday:reduce(d)};
 }
+
+// ── マヤ暦（ドリームスペル）──
+const MAYA_SIGNS = [
+  '赤い龍','白い風','青い夜','黄色い種','赤い蛇',
+  '白い世界の橋渡し','青い手','黄色い星','赤い月','白い犬',
+  '青い猿','黄色い人','赤い空歩く人','白い魔法使い','青い鷲',
+  '黄色い戦士','赤い地球','白い鏡','青い嵐','黄色い太陽'
+];
+const MAYA_WAVESPELL = [
+  '赤い龍','白い魔法使い','青い手','黄色い太陽','赤い空歩く人',
+  '白い世界の橋渡し','青い嵐','黄色い星','赤い月','白い犬',
+  '青い猿','黄色い人','赤い蛇','白い鏡','青い鷲',
+  '黄色い戦士','赤い地球','白い風','青い夜','黄色い種'
+];
+const MAYA_TONE_NAMES = ['','磁気','月','電気','自己存在','倍音','リズム','共鳴','銀河','太陽','惑星','スペクトル','水晶','宇宙'];
+const MAYA_SIGN_DESC = {
+  '赤い龍':'生命の源。養い育む力を持ち、物事の始まりを司ります。',
+  '白い風':'神聖なるコミュニケーション。言葉と息吹で真実を伝えます。',
+  '青い夜':'夢と直感の力。豊かさを内側から引き出す探求者。',
+  '黄色い種':'目覚めと開花。知識を種として未来に蒔く力を持ちます。',
+  '赤い蛇':'生命力と情熱。本能と肉体の力で変容を促します。',
+  '白い世界の橋渡し':'死と再生。次元を超えて橋を架ける使者。',
+  '青い手':'癒しと達成。手を使って世界を変える力を持ちます。',
+  '黄色い星':'美と芸術。宇宙の調和を地上に体現します。',
+  '赤い月':'宇宙の水。感情と浄化のエネルギーで流れを作ります。',
+  '白い犬':'愛と忠誠。無条件の愛で人々をつなぎます。',
+  '青い猿':'遊びと魔法。ユーモアで真実を映し出す魔法使い。',
+  '黄色い人':'自由意志と影響力。人間としての智慧と理解力に優れます。',
+  '赤い空歩く人':'天と地の探求者。新しい空間を開拓し可能性を広げます。',
+  '白い魔法使い':'永遠の時。魔法のように物事を引き寄せる力を持ちます。',
+  '青い鷲':'創造と視野。高い視点から全体を見渡す鋭い洞察力。',
+  '黄色い戦士':'宇宙の問い。恐れを超えて真実を探求する勇敢な戦士。',
+  '赤い地球':'地球の力。同調とシンクロニシティを引き寄せます。',
+  '白い鏡':'宇宙の鏡。真実を映し出し秩序をもたらします。',
+  '青い嵐':'変容と自己生成。嵐のように現状を変革する力。',
+  '黄色い太陽':'宇宙の炎。啓蒙と解放で光をもたらす太陽の存在。'
+};
+const MAYA_TONE_DESC = [
+  '','目的・引力・統一','挑戦・二極化・安定','行動・電気・奉仕',
+  '形・定義・測定','中心・放射・コマンド','平等・リズム・バランス',
+  '共鳴・チャンネル・調律','誠実さ・調和・モデル','意図・脈動・実現',
+  '創造・完璧・完成','解放・分解・放出','奉献・協力・普遍化',
+  '忍耐・超越・現存'
+];
+
+function calcMaya(birth){
+  const base = new Date(1987, 6, 26); // 1987年7月26日 = KIN1
+  
+  // 日数差（うるう年の2月29日を除く）
+  function daysExclFeb29(d1, d2){
+    let days = Math.round((d2 - d1) / 86400000);
+    const sign = days >= 0 ? 1 : -1;
+    const [start, end] = days >= 0 ? [d1, d2] : [d2, d1];
+    let feb29count = 0;
+    for(let y = start.getFullYear(); y <= end.getFullYear(); y++){
+      if(y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)){
+        const feb29 = new Date(y, 1, 29);
+        if(feb29 > start && feb29 <= end) feb29count++;
+      }
+    }
+    return sign * (Math.abs(days) - feb29count);
+  }
+  
+  const diff = daysExclFeb29(base, birth);
+  let kin = ((diff + 33) % 260 + 260) % 260 + 1;
+  
+  const sign = MAYA_SIGNS[(kin-1)%20];
+  const tone = (kin-1)%13+1;
+  const ws = MAYA_SIGNS[(kin-(kin-1)%13-1)%20]; // ウェイブスペル：WSの最初のKINの太陽の紋章
+  const color = ['赤','白','青','黄'][(kin-1)%4 < 4 ? (kin-1)%20 < 5 ? 0 : (kin-1)%20 < 10 ? 2 : (kin-1)%20 < 15 ? 0 : (kin-1)%20 < 20 ? 3 : 0 : 0];
+  
+  // 色を正しく設定
+  const colors = ['赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄'];
+  const signColor = colors[(kin-1)%20];
+  
+  return {kin, sign, tone, ws, signColor};
+}
+
+// 姓名判断用画数テーブル
+const KANJI_STROKES={
+  '一':1,
+  '二':2,'人':2,'力':2,'八':2,'十':2,'入':2,
+  '三':3,'山':3,'川':3,'口':3,'土':3,'大':3,'小':3,'万':3,'上':3,'下':3,'子':3,'女':3,'丸':3,'己':3,
+  '中':4,'日':4,'木':4,'水':4,'火':4,'手':4,'心':4,'文':4,'天':4,'元':4,'友':4,'太':4,'夫':4,'月':4,'今':4,'仁':4,'介':4,'公':4,'六':4,'分':4,'化':4,'毛':4,'反':4,'勾':4,'幻':4,'丹':4,'以':4,'云':4,'互':4,'井':4,'五':4,
+  '五':5,'田':5,'白':5,'石':5,'目':5,'生':5,'正':5,'本':5,'玉':5,'世':5,'主':5,'代':5,'丘':5,'平':5,'弘':5,'央':5,'広':5,'永':5,'民':5,'皮':5,'甲':5,'令':5,'由':5,'矢':5,'史':5,'失':5,'末':5,'未':5,'母':5,'冬':5,'古':5,'右':5,'司':5,'加':5,'可':5,
+  '六':6,'光':6,'名':6,'安':6,'先':6,'好':6,'成':6,'自':6,'西':6,'地':6,'早':6,'米':6,'多':6,'色':6,'同':6,'合':6,'吉':6,'州':6,'江':6,'仲':6,'伊':6,'伍':6,'休':6,'全':6,'共':6,'各':6,'在':6,'圭':6,'壮':6,'存':6,'妃':6,'宇':6,'宅':6,'守':6,'字':6,'朱':6,'次':6,'気':6,'汐':6,'池':6,'竹':6,'糸':6,'耳':6,'肉':6,'臣':6,'行':6,'羊':6,'印':6,'回':6,'団':6,'忙':6,'托':6,'汗':6,
+  '七':7,'花':7,'村':7,'男':7,'町':7,'何':7,'作':7,'体':7,'住':7,'位':7,'佐':7,'克':7,'初':7,'利':7,'助':7,'志':7,'忍':7,'快':7,'我':7,'技':7,'杉':7,'材':7,'求':7,'決':7,'沙':7,'沖':7,'沢':7,'状':7,'芳':7,'見':7,'角':7,'谷':7,'赤':7,'走':7,'足':7,'里':7,'労':7,'医':7,'来':7,
+  '八':8,'岩':8,'金':8,'長':8,'青':8,'東':8,'国':8,'明':8,'知':8,'林':8,'和':8,'学':8,'空':8,'京':8,'具':8,'典':8,'刻':8,'受':8,'味':8,'命':8,'固':8,'夜':8,'奇':8,'委':8,'妻':8,'始':8,'季':8,'岡':8,'岸':8,'幸':8,'延':8,'弦':8,'往':8,'拓':8,'昌':8,'昇':8,'昔':8,'松':8,'武':8,'河':8,'沼':8,'泳':8,'波':8,'炎':8,'牧':8,'版':8,'直':8,'竺':8,'竿':8,'育':8,'英':8,'茂':8,'表':8,'采':8,'姓':8,
+  '九':9,'南':9,'春':9,'音':9,'品':9,'信':9,'保':9,'勇':9,'厚':9,'咲':9,'型':9,'奏':9,'専':9,'建':9,'後':9,'持':9,'指':9,'政':9,'映':9,'星':9,'柏':9,'泉':9,'洋':9,'活':9,'海':9,'珍':9,'省':9,'研':9,'祐':9,'秋':9,'紀':9,'美':9,'胃':9,'要':9,'貞':9,'重':9,'威':9,
+  '桜':10,'原':10,'夏':10,'時':10,'家':10,'高':10,'記':10,'倉':10,'修':10,'兼':10,'准':10,'凌':10,'剛':10,'哲':10,'唐':10,'宮':10,'座':10,'浦':10,'烈':10,'特':10,'真':10,'祥':10,'純':10,'紘':10,'紗':10,'素':10,'能':10,'般':10,'航':10,'訓':10,'馬':10,'俊':10,
+  '崎':11,'清':11,'深':11,'野':11,'望':11,'理':11,'習':11,'動':11,'強':11,'健':11,'商':11,'問':11,'彩':11,'彬':11,'啓':11,'堀':11,'堅':11,'婚':11,'婦':11,'常':11,'情':11,'推':11,'敏':11,'梢':11,'梨':11,'猛':11,'球':11,'略':11,'章':11,'経':11,'習':11,'船':11,'術':11,'規':11,'視':11,'許':11,'野':11,'陸':11,'雪':11,'鳥':11,'都':11,'郎':9,
+  '﨑':12,'満':12,'晴':12,'景':12,'森':12,'朝':12,'湖':12,'湧':12,'無':12,'登':12,'皓':12,'超':12,'達':12,'雄':12,'順':12,'須':12,'飯':12,'貴':12,'絵':12,'統':12,'渡':12,
+  '愛':13,'義':13,'照':13,'源':13,'瑞':13,'聖':13,'鈴':13,'雅':13,'誠':13,
+  '徳':14,'聞':14,'語':14,
+  '熱':15,'賢':15,'輝':15,
+  '樹':16,'龍':16,'錦':16,
+  '優':17,'環':17,
+  '藤':18,'観':18,
+  '麗':19,
+  '響':20,
+};
+
+function getStrokes(char){
+  if(KANJI_STROKES[char])return KANJI_STROKES[char];
+  // フォールバック：Unicodeベースの概算（精度低）
+  const code=char.charCodeAt(0);
+  if(code>=0x4E00&&code<=0x9FFF)return Math.max(1,Math.round((code-0x4E00)/500)+1);
+  return 1;
+}
+
 function calcSeimei(name){
   const parts=name.trim().split(/\s+/);
   const sei=parts[0]||'',mei=parts[1]||'';
-  function st(s){let t=0;for(const c of s){const code=c.charCodeAt(0);t+=code>=0x4E00&&code<=0x9FFF?(code-0x4E00)%20+1:1;}return t||1;}
-  const seiS=st(sei),meiS=st(mei);
-  return{sei,mei,seiS,meiS,ten:reduce(seiS),chi:reduce(meiS),jin:reduce(seiS+meiS),gai:reduce((sei.length>1?st(sei[0]):1)+(mei.length>0?st(mei[mei.length-1]):1)),sou:reduce(seiS+meiS)};
+  // 各文字の画数合計
+  const seiStrokes=[...sei].map(c=>getStrokes(c));
+  const meiStrokes=[...mei].map(c=>getStrokes(c));
+  const seiS=seiStrokes.reduce((a,b)=>a+b,0)||1;
+  const meiS=meiStrokes.reduce((a,b)=>a+b,0)||1;
+  // 一字名は霊数（仮数）1を加える
+  const reisuu=mei.length===1?1:0;
+  // 五格の計算
+  const ten=seiS; // 天格：姓の画数合計
+  const chi=meiS+reisuu; // 地格：名の画数合計（＋霊数）
+  const jin=seiStrokes[seiStrokes.length-1]+(meiStrokes[0]||reisuu); // 人格：姓末字＋名首字
+  const gai=seiStrokes[0]+(mei.length===1?reisuu:meiStrokes[meiStrokes.length-1]); // 外格：姓首字＋名末字（一字名は霊数）（または霊数）
+  const sou=seiS+meiS; // 総格：全画数合計
+  return{sei,mei,ten,chi,jin,gai,sou,seiS,meiS};
 }
 function drawKK(seed){let r=sr(seed)*KICHIKU.reduce((a,k)=>a+k.w,0);for(const k of KICHIKU){r-=k.w;if(r<=0)return k;}return KICHIKU[1];}
 function getLucky(seed){return{color:LUCKY_COLORS[Math.floor(sr(seed+1)*LUCKY_COLORS.length)],dir:LUCKY_DIRS[Math.floor(sr(seed+2)*LUCKY_DIRS.length)],item:LUCKY_ITEMS[Math.floor(sr(seed+3)*LUCKY_ITEMS.length)]};}
@@ -832,8 +1011,8 @@ function renderUnmeiIndividual(sc,k,su,se){
     +'</div>'
     +'<div class="individual-block">'
     +'<div class="indiv-title">九 星 気 学</div>'
-    +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'</div>'
-    +'<div class="indiv-text">'+(KYUSEI_DESC[k.honmei]||'')+'。</div>'
+    +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+(k.tsuki?'　月命星：'+KYUSEI[k.tsuki-1]:'')+(k.keisha?'　傾斜宮：'+k.keisha+'宮':'')+'</div>'
+    +'<div class="indiv-text">'+(KYUSEI_DESC[k.honmei]||'')+'。'+(k.tsuki&&k.tsuki!==k.honmei?'月命星'+KYUSEI[k.tsuki-1]+'の影響も受けます。':'')+'</div>'
     +'</div>'
     +'<div class="individual-block">'
     +'<div class="indiv-title">数 秘 術</div>'
@@ -841,9 +1020,14 @@ function renderUnmeiIndividual(sc,k,su,se){
     +'<div class="indiv-text">'+(SUUHI_DESC[su.lifepath]||'')+'を持って生まれてきました。</div>'
     +'</div>'
     +'<div class="individual-block">'
+    +'<div class="indiv-title">マ ヤ 暦</div>'
+    +'<div class="indiv-data">KIN'+S.maya.kin+'\u3000'+S.maya.sign+'（音'+S.maya.tone+'・'+MAYA_TONE_NAMES[S.maya.tone]+'）\u3000WS：'+S.maya.ws+'</div>'
+    +'<div class="indiv-text">'+(MAYA_SIGN_DESC[S.maya.sign]||'')+'</div>'
+    +'</div>'
+    +'<div class="individual-block">'
     +'<div class="indiv-title">姓 名 判 断</div>'
-    +'<div class="indiv-data">人格：'+se.jin+'　外格：'+se.gai+'　総格：'+se.sou+'　総画数：'+(se.seiS+se.meiS)+'画</div>'
-    +'<div class="indiv-text">人格数'+se.jin+'は対人関係における本質的な資質、総格'+se.sou+'は人生全体の運勢の流れを表しています。</div>'
+    +'<div class="indiv-data">天格：'+se.ten+'　人格：'+se.jin+'　地格：'+se.chi+'　外格：'+se.gai+'　総格：'+se.sou+'</div>'
+    +'<div class="indiv-text">天格'+se.ten+'（姓の運）・人格'+se.jin+'（対人の本質）・地格'+se.chi+'（名の運）・外格'+se.gai+'（社会運）・総格'+se.sou+'（人生全体）。</div>'
     +'</div>'
     +'<div class="divhr"></div>'
     +'<div class="result-lbl">総 合 鑑 定</div>';
@@ -965,6 +1149,7 @@ function startReadingFromProfile(profile){
   S.kyusei=calcKyusei(S.birth);
   S.suuhi=calcSuuhi(S.birth);
   S.seimei=calcSeimei(name);
+  S.maya=calcMaya(S.birth);
   drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
   try{localStorage.setItem('mk_profile',JSON.stringify({name,birth:bv,hour:S.hour,gender:S.gender}));}catch(e){}
   document.getElementById('input-area').style.display='none';
@@ -1162,9 +1347,10 @@ async function genUnmei(){
   document.getElementById('unmei-msg').innerHTML=renderUnmeiIndividual(sc,k,su,se)+'<div id="unmei-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
   const prompt=`【4つの占術が同時に示していること】
 ・${sc.ni.kanEl}の本質と${sc.ni.shi}の気質を併せ持つ（四柱推命）
-・${KYUSEI[k.honmei-1]}として${KYUSEI_EL[k.honmei-1]}の力を体現している（九星気学）
+・${KYUSEI[k.honmei-1]}として本命星${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）・月命星${k.tsuki?KYUSEI[k.tsuki-1]:''}・傾斜宮${k.keisha||''}宮（九星気学）
 ・ライフパス${su.lifepath}「${SUUHI_NAMES[su.lifepath]||''}」という魂の方向性（数秘術）
-・人格${se.jin}・総格${se.sou}という名の力（姓名判断）
+・天格${se.ten}・人格${se.jin}・地格${se.chi}・外格${se.gai}・総格${se.sou}という名の力（姓名判断）
+・KIN${S.maya?.kin||''}「${S.maya?.sign||''}」音${S.maya?.tone||''}（${MAYA_TONE_NAMES[S.maya?.tone]||''}）WS：${S.maya?.ws||''}（マヤ暦）
 ${S.gender?`・性別：${S.gender==='female'?'女性':'男性'}`:''}
 
 上記4つの占術がすべて一致して示している「この人の魂の核心」を、3段落で天啓として書いてください。
@@ -1302,7 +1488,7 @@ async function genToday(){
   const kk=drawKK(seed),lk=getLucky(seed),k=S.kyusei,m=target.getMonth()+1;
   const sc=S.shicyu;
   document.getElementById('today-date').textContent=`${target.getFullYear()}年${m}月${target.getDate()}日（${WD[target.getDay()]}）`;
-  document.getElementById('today-kichiku').innerHTML=`<div class="kichiku-wrap"><div class="kichiku-furi">${kk.furi}</div><div class="kichiku ${kk.cls}">${kk.label}</div><div class="kichiku-en">${kk.en}</div><div class="kyusei-badge">本命星：${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）</div></div>`;
+  document.getElementById('today-kichiku').innerHTML=`<div class="kichiku-wrap"><div class="kichiku-furi">${kk.furi}</div><div class="kichiku ${kk.cls}">${kk.label}</div><div class="kichiku-en">${kk.en}</div><div class="kyusei-badge">本命星：${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）、月命星：${k.tsuki?KYUSEI[k.tsuki-1]:''}、傾斜宮：${k.keisha||''}宮</div></div>`;
   document.getElementById('today-grid').innerHTML=`<div class="gitem"><div class="gl">今日の九星</div><div class="gv">${KYUSEI[k.todayK-1]}</div></div><div class="gitem"><div class="gl">ラッキーカラー</div><div class="gv">${lk.color}</div></div><div class="gitem"><div class="gl">吉 方 位</div><div class="gv">${lk.dir}</div></div><div class="gitem"><div class="gl">縁 起 物</div><div class="gv">${lk.item}</div></div>`;
   const key=currentDayKey();
   const cached=loadCache(key);
@@ -1379,7 +1565,7 @@ function genTodayIfNeeded(){
     const seed=mkSeed(S.birth,target);
     const kk=drawKK(seed),lk=getLucky(seed),k=S.kyusei,m=target.getMonth()+1;
     document.getElementById('today-date').textContent=`${target.getFullYear()}年${m}月${target.getDate()}日（${WD[target.getDay()]}）`;
-    document.getElementById('today-kichiku').innerHTML=`<div class="kichiku-wrap"><div class="kichiku-furi">${kk.furi}</div><div class="kichiku ${kk.cls}">${kk.label}</div><div class="kichiku-en">${kk.en}</div><div class="kyusei-badge">本命星：${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）</div></div>`;
+    document.getElementById('today-kichiku').innerHTML=`<div class="kichiku-wrap"><div class="kichiku-furi">${kk.furi}</div><div class="kichiku ${kk.cls}">${kk.label}</div><div class="kichiku-en">${kk.en}</div><div class="kyusei-badge">本命星：${KYUSEI[k.honmei-1]}（${KYUSEI_EL[k.honmei-1]}）、月命星：${k.tsuki?KYUSEI[k.tsuki-1]:''}、傾斜宮：${k.keisha||''}宮</div></div>`;
     document.getElementById('today-grid').innerHTML=`<div class="gitem"><div class="gl">今日の九星</div><div class="gv">${KYUSEI[k.todayK-1]}</div></div><div class="gitem"><div class="gl">ラッキーカラー</div><div class="gv">${lk.color}</div></div><div class="gitem"><div class="gl">吉 方 位</div><div class="gv">${lk.dir}</div></div><div class="gitem"><div class="gl">縁 起 物</div><div class="gv">${lk.item}</div></div>`;
     if(cached.cards){drawnCards.today=cached.cards;renderTarotRow(cached.cards,'today-tarot-row');}
     document.getElementById('today-msg').innerHTML=renderTarotIndividual(drawnCards.today||[])+'<div class="divhr"></div><div class="result-lbl">今 日 の 言 葉</div><div id="today-kotoba"></div>';
@@ -1457,7 +1643,8 @@ function startReading(){
   S.name=name;S.birthStr=bv;S.birth=new Date(bv+'T00:00:00');S.hour=document.getElementById('inp-hour').value;S.gender=document.getElementById('inp-gender').value;S.today=new Date();
   const seed=mkSeed(S.birth,S.today);
   S.kk=drawKK(seed);S.lucky=getLucky(seed);
-  S.shicyu=calcShicyu(S.birth,S.hour);S.kyusei=calcKyusei(S.birth);S.suuhi=calcSuuhi(S.birth);S.seimei=calcSeimei(name);
+  S.shicyu=calcShicyu(S.birth,S.hour);S.kyusei=calcKyusei(S.birth,S.shicyu?.tsuShiIdx);S.suuhi=calcSuuhi(S.birth);S.seimei=calcSeimei(name);
+  S.maya=calcMaya(S.birth);
   drawnCards={today:[],konshu:[],kongetsu:[],kotoshi:[],kobetsu:[]};
   try{localStorage.setItem('mk_profile',JSON.stringify({name,birth:bv,hour:S.hour,gender:S.gender}));}catch(e){}
   // Supabaseにプロフィール保存
