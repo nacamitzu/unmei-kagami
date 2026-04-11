@@ -1725,7 +1725,7 @@ ${weekKinStr}
 日曜：〇〇なエネルギーの日。△△を意識して□□を行動に移しましょう。
 今週の一言：（今週を象徴する短い言葉）`;
   try{
-    const text=await callAPI(prompt,800);
+    const text=await callAPI(prompt,2000);
     saveCache(key,{text,cards});
     renderNidan(text,'konshu-sogo');
     document.getElementById('konshu-cache-note').textContent='鑑定結果をブラウザに保存しました';
@@ -1785,7 +1785,7 @@ async function genToday(){
 解説：（200字以上・今日のKINエネルギーと心身への天啓として語りかける）
 一言：（今日という日の本質を一言で表す言葉）`;
   try{
-    const text=await callAPI(prompt,600);
+    const text=await callAPI(prompt,1200);
     saveCache(key,{text,cards});
     renderTodayKotoba(text);
   }catch(e){showError('today-kotoba',e.message||'生成に失敗しました');}
