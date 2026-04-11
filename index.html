@@ -1580,7 +1580,6 @@ async function genKotoshi(){
   const t=S.today,y=yearMode==='next'?t.getFullYear()+1:t.getFullYear();
   const sc=S.shicyu,k=S.kyusei,su=S.suuhi;
   const cards=drawnCards.kotoshi.length?drawnCards.kotoshi:initTarot('kotoshi');
-  renderTarotRow(cards,'kotoshi-tarot-row');
   function buildHtml(){
     return '<div class="individual-block"><div class="indiv-title">命 術</div>'
       +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'（'+sc.ni.kanEl+'）　ライフパス：'+su.lifepath+'</div>'
@@ -1595,6 +1594,7 @@ async function genKotoshi(){
     document.getElementById('kotoshi-cache-note').textContent=`保存済みの鑑定（${cached.saved.slice(0,10)}）`;return;
   }
   document.getElementById('kotoshi-msg').innerHTML=buildHtml()+'<div id="kotoshi-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  renderTarotRow(cards,'kotoshi-tarot-row');
   const prompt=`【${y}年の鑑定データが示していること】
 ・命術：${sc.ni.kanEl}の本質を持つ${KYUSEI[k.honmei-1]}が、ライフパス${su.lifepath}（${SUUHI_NAMES[su.lifepath]||''}）として歩む${y}年
 ・タロット5枚が示す${y}年の流れ：${tarotStr(cards)}
@@ -1620,7 +1620,6 @@ async function genKongetsu(){
   if(monthMode==='next'){m++;if(m>12){m=1;y++;}}
   const sc=S.shicyu,k=S.kyusei;
   const cards=drawnCards.kongetsu.length?drawnCards.kongetsu:initTarot('kongetsu');
-  renderTarotRow(cards,'kongetsu-tarot-row');
   function buildHtml(){
     return '<div class="individual-block"><div class="indiv-title">命 術</div>'
       +'<div class="indiv-data">本命星：'+KYUSEI[k.honmei-1]+'　日主：'+sc.ni.kan+sc.ni.shi+'（'+sc.ni.kanEl+'）</div>'
@@ -1635,6 +1634,7 @@ async function genKongetsu(){
     document.getElementById('kongetsu-cache-note').textContent=`保存済みの鑑定（${cached.saved.slice(0,10)}）`;return;
   }
   document.getElementById('kongetsu-msg').innerHTML=buildHtml()+'<div id="kongetsu-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  renderTarotRow(cards,'kongetsu-tarot-row');
   const prompt=`【${y}年${m}月の鑑定データが示していること】
 ・命術：${sc.ni.kanEl}の本質を持つ${KYUSEI[k.honmei-1]}が迎える${y}年${m}月（${getSeason(m)}）
 ・タロット3枚が示すこの月の流れ：${tarotStr(cards)}
@@ -1658,7 +1658,6 @@ async function genKonshu(){
   const t=S.today,target=weekMode==='next'?nextMonday(t):thisMonday(t);
   const sc=S.shicyu,k=S.kyusei,lk=S.lucky,m=target.getMonth()+1;
   const cards=drawnCards.konshu.length?drawnCards.konshu:initTarot('konshu');
-  renderTarotRow(cards,'konshu-tarot-row');
   function buildHtml(){
     const WD3=['日','月','火','水','木','金','土'];
     const kinColorMap=['赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄','赤','白','青','黄'];
@@ -1694,6 +1693,7 @@ async function genKonshu(){
     document.getElementById('konshu-cache-note').textContent=`保存済みの鑑定（${cached.saved.slice(0,10)}）`;return;
   }
   document.getElementById('konshu-msg').innerHTML=buildHtml()+'<div id="konshu-sogo"><span class="dots"><span></span><span></span><span></span></span></div>';
+  renderTarotRow(cards,'konshu-tarot-row');
   // 今週7日分のKINデータを生成
   const weekKins = [];
   const WD2=['日','月','火','水','木','金','土'];
